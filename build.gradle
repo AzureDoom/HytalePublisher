@@ -22,7 +22,7 @@ dependencies {
 gradlePlugin {
 	website = project.plugin_website
 	vcsUrl = project.plugin_vcs_url
-	
+
 	plugins {
 		create('hytalePublisher') {
 			id = project.plugin_group

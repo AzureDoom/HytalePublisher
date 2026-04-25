@@ -35,6 +35,9 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenLocal()
+        maven {
+            url = uri("https://maven.azuredoom.com/mods")
+        }
     }
 }
 ```
@@ -350,6 +353,9 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
         mavenLocal()
+        maven {
+            url = uri("https://maven.azuredoom.com/mods")
+        }
     }
 }
 
