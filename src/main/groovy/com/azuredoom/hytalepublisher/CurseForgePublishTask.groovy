@@ -1,0 +1,51 @@
+package com.azuredoom.hytalepublisher
+
+import groovy.json.JsonOutput
+import org.gradle.api.GradleException
+import org.gradle.api.tasks.TaskAction
+
+class CurseForgePublishTask extends AbstractPublishTask {
+
+	@TaskAction
+	void publish() {
+		def ext = publishExtension
+		def cfg = ext.curseforge
+
+		if (!cfg.projectId) throw new GradleException("[HytalePublisher] curseforge.projectId must be set.")
+
+		def key  = credentials().require(cfg.apiKeyProp, cfg.apiKeyEnv, "CurseForge API token")
+		def jar  = resolveJar()
+		def log  = readChangelog()
+		def curl = curlExe()
+
+		def deps = cfg.dependencies.collect { dep ->
+			[slug: dep.id, type: dep.optional ? "optionalDependency" : "requiredDependency"]
+		}
+
+		def metadata = JsonOutput.toJson([
+			changelog    : log,
+			changelogType: "markdown",
+			displayName  : "${project.name} ${ext.version.get()}",
+			gameVersions : cfg.gameVersionIds,
+			releaseType  : ext.releaseType.get().toLowerCase(),
+			relations    : [projects: deps]
+		])
+
+		exec([
+			curl,
+			"-f",
+			"-sS",
+			"-X",
+			"POST",
+			"https://legacy.curseforge.com/api/projects/${cfg.projectId}/upload-file",
+			"-H",
+			"X-Api-Token: ${key}",
+			"-F",
+			"metadata=${metadata};type=application/json",
+			"-F",
+			"file=@${jar.absolutePath}"
+		])
+
+		logger.lifecycle("[HytalePublisher] Successfully published to CurseForge: ${project.name} ${ext.version.get()}")
+	}
+}

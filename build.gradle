@@ -1,0 +1,105 @@
+plugins {
+	id 'groovy'
+	id 'java-gradle-plugin'
+	id 'maven-publish'
+	id 'com.gradle.plugin-publish' version '2.1.1'
+	id 'com.diffplug.spotless' version '8.1.0'
+}
+
+group = project.plugin_group
+version = project.plugin_version
+
+repositories {
+	mavenCentral()
+	gradlePluginPortal()
+}
+
+dependencies {
+	implementation gradleApi()
+	implementation localGroovy()
+}
+
+gradlePlugin {
+	plugins {
+		create('hytalePublisher') {
+			id = project.plugin_group
+			implementationClass = project.plugin_implementation_class
+			displayName = project.plugin_display_name
+			description = project.plugin_description
+			tags.set([
+				'hytale',
+				'modding',
+				'publishing',
+				'automation',
+				'gradle-plugin',
+				'curseforge',
+				'modtale',
+				'modifold'
+			])
+		}
+	}
+}
+
+publishing {
+	publications {
+		withType(MavenPublication).configureEach {
+			pom {
+				name = project.plugin_display_name
+				description = """
+<p>
+  HytalePublisher is a Gradle plugin that automates publishing Hytale mods to multiple hosting platforms from a single Gradle configuration.
+</p>
+
+<p>
+  It supports publishing to Modtale, CurseForge, and Modifold, with each platform configured independently. Only enabled platforms register publishing tasks, allowing you to publish to one or all targets in a single workflow.
+</p>
+
+<p>
+  Features include API key resolution from <code>key.properties</code> or environment variables, project IDs configured in Gradle instead of credential files, changelog upload support, platform-specific dependency metadata, and a <code>publishAll</code> task.
+</p>
+
+<p>
+  HytalePublisher is designed for both local development and CI/CD pipelines, and is built to support additional hosting platforms in the future.
+</p>
+"""
+			}
+		}
+	}
+
+	repositories {
+		maven {
+			name = project.mod_id
+			url = uri(project.maven_url)
+
+			credentials(PasswordCredentials) {
+				username = findProperty("azuremavenUsername") ?: System.getenv("AZURE_MAVEN_USERNAME")
+				password = findProperty("azuremavenPassword") ?: System.getenv("AZURE_MAVEN_PASSWORD")
+			}
+
+			authentication {
+				basic(BasicAuthentication)
+			}
+		}
+	}
+}
+
+tasks.register('publishPluginRelease') {
+	group = 'publishing'
+	description = 'Validates, tests, and publishes the plugin to the Gradle Plugin Portal.'
+	dependsOn 'clean', 'check', 'validatePlugins', 'publishPlugins'
+}
+
+tasks.register('publishEverywhere') {
+	group = 'publishing'
+	description = 'Publishes to both the configured Maven repository and the Gradle Plugin Portal.'
+	dependsOn 'clean', 'check', 'validatePlugins', 'publish', 'publishPlugins'
+}
+
+spotless {
+	groovy {
+		greclipse()
+	}
+	groovyGradle {
+		greclipse()
+	}
+}
