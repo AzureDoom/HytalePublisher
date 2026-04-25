@@ -2,7 +2,9 @@ package com.azuredoom.hytalepublisher
 
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Publishing uploads files to Modtale and should always execute when requested.")
 class ModtalePublishTask extends AbstractPublishTask {
 
 	@TaskAction

@@ -4,7 +4,9 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Internal
 import org.gradle.internal.os.OperatingSystem
+import org.gradle.work.DisableCachingByDefault
 
+@DisableCachingByDefault(because = "Publishing uploads files to external services and should always execute when requested.")
 abstract class AbstractPublishTask extends DefaultTask {
 
 	@Internal
