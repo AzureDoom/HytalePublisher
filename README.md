@@ -68,6 +68,11 @@ modifoldKey=your-modifold-bearer-token
 
 Project IDs should be configured in the Gradle DSL, not in `key.properties`.
 
+You can get your API from the following links:
+- Modtale: https://modtale.net/dashboard/developer
+- CurseForge: https://legacy.curseforge.com/account/api-tokens
+- Modifold: https://modifold.com/settings/api
+
 ### Environment variable support
 
 Credentials can also be provided through environment variables. This is recommended for CI/CD workflows.
