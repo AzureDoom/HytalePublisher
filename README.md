@@ -324,16 +324,16 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Java
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v5
 
       - name: Publish enabled platforms
         run: ./gradlew publishAll
@@ -441,6 +441,11 @@ Each publish task uses the JAR built by the subproject where the plugin is appli
 | Modifold   | `modifoldKey` or `MODIFOLD_KEY` | `modifold.projectId`   |
 
 API key property names and environment variable names can be customized in the DSL using `apiKeyProp` and `apiKeyEnv`.
+
+You can get your API from the following links:
+- Modtale: https://modtale.net/dashboard/developer
+- CurseForge: https://legacy.curseforge.com/account/api-tokens
+- Modifold: https://modifold.com/settings/api
 
 ---
 
