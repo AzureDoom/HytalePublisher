@@ -65,8 +65,8 @@ abstract class AbstractPublishTask extends DefaultTask {
 
 		if (exitCode != 0) {
 			throw new GradleException(
-					"[HytalePublisher] Upload failed with exit code ${exitCode}.\n\n" +
-							output.toString()
+			"[HytalePublisher] Upload failed with exit code ${exitCode}.\n\n" +
+			output.toString()
 			)
 		}
 

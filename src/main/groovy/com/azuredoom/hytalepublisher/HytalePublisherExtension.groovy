@@ -28,7 +28,7 @@ class HytalePublisherExtension {
 							? project.property("hytale_version").toString()
 							: "Early Access"
 				}
-		)
+				)
 		changelogFile = objects.property(String).convention("changelog.md")
 
 		modtale    = objects.newInstance(ModtaleConfig)
