@@ -20,7 +20,7 @@ class ModifoldPublishTask extends AbstractPublishTask {
 		def log  = readChangelog()
 		def curl = curlExe()
 
-		exec([
+		def args = [
 			curl,
 			"-f",
 			"-sS",
@@ -41,7 +41,23 @@ class ModifoldPublishTask extends AbstractPublishTask {
 			"loaders=${JsonOutput.toJson(cfg.loaders)}",
 			"-F",
 			"changelog=${log}"
-		])
+		] as List<String>
+
+		if (!cfg.dependencies.isEmpty()) {
+			def depsJson = JsonOutput.toJson(cfg.dependencies.collect { dep ->
+				def entry = [slug: dep.slug, type: dep.type]
+				if (dep.versionId != null && !dep.versionId.isEmpty()) {
+					entry.version_id = dep.versionId
+				}
+				return entry
+			})
+			args += [
+				'-F',
+				"dependencies=${depsJson}"
+			]
+		}
+
+		exec(args)
 
 		logger.lifecycle("[HytalePublisher] Successfully published to Modifold: ${project.name} ${ext.version.get()}")
 	}

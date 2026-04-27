@@ -17,7 +17,7 @@ It provides a single Gradle DSL for configuring release metadata, platform-speci
 - Configure shared release metadata with sensible platform-specific defaults
 - Read API keys from `key.properties` or environment variables
 - Keep project IDs in the Gradle DSL instead of credential files
-- Define platform-specific dependencies where supported
+- Define platform-specific dependencies on Modtale, CurseForge, and Modifold
 - Automatically run `build` before publishing
 - Use `publishAll` to publish to every enabled platform
 - Designed to support additional hosting platforms in the future
@@ -140,7 +140,12 @@ hytalePublisher {
         // loaders      = ["vanilla"]
         // gameVersions = [project.hytale_version]
 
-        // Modifold dependencies are not currently supported.
+        // Dependencies: required / optional / incompatible / embedded
+        // Second argument is an optional Modifold version_id; omit for "any version"
+        required     "mermaids", "oCK3bg"
+        optional     "prettier-than-before"
+        incompatible "broken-mod"
+        embedded     "bundled-helper", "abc123"
     }
 }
 ```
@@ -518,7 +523,6 @@ You can get your API from the following links:
 - Project IDs belong in the Gradle DSL.
 - Changelog paths are resolved relative to the root project directory.
 - Dependency configuration is platform-specific because each hosting service supports different dependency metadata.
-- Modifold dependency metadata is not currently supported.
 
 ---
 
@@ -540,6 +544,12 @@ You can get your API from the following links:
 
 - `gameVersions` and `loaders` must be arrays
 - These are automatically JSON-encoded by the plugin
+- Supports four dependency types via the DSL:
+    - `required(slug, versionId?)` — the dependency is required for this build to work
+    - `optional(slug, versionId?)` — the dependency is optional
+    - `incompatible(slug, versionId?)` — this build is incompatible with the dependency
+    - `embedded(slug, versionId?)` — the dependency is bundled inside this build
+- The `versionId` argument is optional; omit it to allow any version of the dependency
 
 ---
 

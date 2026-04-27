@@ -100,4 +100,33 @@ class ModifoldConfig {
 	String apiKeyEnv  = "MODIFOLD_KEY"
 	List<String> loaders      = ["vanilla"]
 	List<String> gameVersions = ["Early Access"]
+	final List<ModifoldDependency> dependencies = []
+
+	void required(String slug, String versionId = null) {
+		dependencies << new ModifoldDependency(slug, "required", versionId)
+	}
+
+	void optional(String slug, String versionId = null) {
+		dependencies << new ModifoldDependency(slug, "optional", versionId)
+	}
+
+	void incompatible(String slug, String versionId = null) {
+		dependencies << new ModifoldDependency(slug, "incompatible", versionId)
+	}
+
+	void embedded(String slug, String versionId = null) {
+		dependencies << new ModifoldDependency(slug, "embedded", versionId)
+	}
+}
+
+class ModifoldDependency {
+	final String slug
+	final String type
+	final String versionId
+
+	ModifoldDependency(String slug, String type, String versionId = null) {
+		this.slug      = slug
+		this.type      = type
+		this.versionId = versionId
+	}
 }
