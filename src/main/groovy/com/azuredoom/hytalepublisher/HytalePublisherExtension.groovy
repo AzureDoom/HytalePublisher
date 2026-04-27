@@ -28,7 +28,7 @@ class HytalePublisherExtension {
 							? project.property("hytale_version").toString()
 							: "Early Access"
 				}
-				)
+		)
 		changelogFile = objects.property(String).convention("changelog.md")
 
 		modtale    = objects.newInstance(ModtaleConfig)
@@ -64,6 +64,7 @@ class ModtaleConfig {
 	String projectId = ""
 	String apiKeyProp = "modTaleKey"
 	String apiKeyEnv  = "MODTALE_KEY"
+	String patchline = "release"
 	final List<Dependency> dependencies = []
 
 	void required(String modId, String version) {

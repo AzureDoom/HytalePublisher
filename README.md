@@ -93,18 +93,22 @@ Add a `hytalePublisher` block to your `build.gradle` file.
 hytalePublisher {
     // Optional global release metadata
     version       = project.version
-    
+
     releaseType   = "release"       // "release" | "beta" | "alpha"
-    
-    // Defaults to project.hytale_version if present
-    // Override only if needed
+
+    // Defaults to project.hytale_version if present.
+    // Accepts dynamic selectors like "2026.+" — see Game Version below.
     // gameVersion = project.hytale_version
-    
+
     changelogFile = "changelog.md"  // Relative to the root project directory
 
     modtale {
         enabled   = true
         projectId = "your-modtale-project-id"
+
+        // Hytale patchline used to resolve dynamic gameVersion selectors.
+        // Has no effect when gameVersion is set to a concrete version.
+        // patchline = "release"   // or "pre-release"
 
         // Optional credential key overrides
         // apiKeyProp = "modTaleKey"
@@ -156,6 +160,60 @@ If `hytale_version` is not set, some platforms (such as Modtale) may reject uplo
 This value is used for platforms like Modtale that require a specific version string.
 
 You typically do not need to set `gameVersion` manually unless you want to override this behavior.
+
+#### Dynamic version selectors
+
+`gameVersion` accepts Gradle-style dynamic version selectors so you can track the latest Hytale build without updating `gradle.properties` for every server release:
+
+```groovy
+hytalePublisher {
+    gameVersion = "2026.+"   // latest 2026.x build on the configured patchline
+
+    modtale {
+        enabled   = true
+        projectId = "your-modtale-project-id"
+        patchline = "release"   // or "pre-release"
+    }
+}
+```
+
+Supported selectors:
+
+- `2026.+` — latest version starting with `2026.`
+- `2026.04.+` — latest version starting with `2026.04.` (note: prefix matching is literal, including leading zeros)
+- `+` — absolute latest version
+- `latest.release` — same as `+`
+
+Range syntax (e.g. `[2026.0,2027.0)`) is not supported. Use a prefix selector or a concrete version instead.
+
+The selector is resolved at publish time by querying the Hytale Maven metadata for the configured `patchline`. The resolved concrete version (e.g. `2026.04.23-937872667`) is what gets uploaded to Modtale, so your published mod stays pinned to a specific server build.
+
+#### Patchline scoping
+
+The `modtale.patchline` field controls which Hytale Maven repository the resolver queries:
+
+- `patchline = "release"` (default) resolves against `https://maven.hytale.com/release`
+- `patchline = "pre-release"` resolves against `https://maven.hytale.com/pre-release`
+
+`patchline` only affects dynamic selector resolution. When `gameVersion` is a concrete value it is uploaded as-is regardless of patchline.
+
+#### Cache behavior
+
+Maven metadata is cached under `<gradle-user-home>/caches/hytale-publisher/` for ten minutes to avoid repeated network calls during a publishing session. To force a fresh fetch (for example, immediately after a new server build is published), delete the cache file for your patchline:
+
+```bash
+# Linux / macOS
+rm ~/.gradle/caches/hytale-publisher/maven-metadata-release.xml
+
+# Or just clear the whole directory
+rm -rf ~/.gradle/caches/hytale-publisher
+```
+
+If the network is unreachable but a cached copy exists, the resolver falls back to the cache with a warning. If nothing is cached and the network is down, publishing fails with a clear error rather than guessing.
+
+#### Standalone resolution
+
+Wildcard resolution does not require the [Hytale Tools](https://github.com/AzureDoom/Hytale-Gradle-Plugin) Gradle plugin to be applied. HytalePublisher fetches version metadata directly from the Hytale Maven, so you can use `2026.+` even in projects that build with a different toolchain.
 
 ---
 
@@ -470,6 +528,8 @@ You can get your API from the following links:
 
 - Uses `gameVersion` (defaults to `project.hytale_version`)
 - Ensure your `hytale_version` matches a valid Modtale-supported version
+- Accepts dynamic selectors like `2026.+` — see [Game Version](#game-version) for details
+- Use `modtale.patchline` (`"release"` or `"pre-release"`) to scope dynamic resolution to a specific Hytale Maven repo
 
 ### CurseForge
 

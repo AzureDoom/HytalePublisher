@@ -18,26 +18,27 @@ class ModtalePublishTask extends AbstractPublishTask {
 		def jar  = resolveJar()
 		def log  = readChangelog()
 		def curl = curlExe()
+		def gameVersion = resolveGameVersion(cfg.patchline)
 
 		def args = [
-			curl,
-			"--fail-with-body",
-			"-sS",
-			"-X",
-			"POST",
-			"https://api.modtale.net/api/v1/projects/${cfg.projectId}/versions",
-			"-H",
-			"X-MODTALE-KEY: ${key}",
-			"-F",
-			"file=@${jar.absolutePath}",
-			"-F",
-			"versionNumber=${ext.version.get()}",
-			"-F",
-			"channel=${ext.releaseType.get()}",
-			"-F",
-			"gameVersions=${ext.gameVersion.get()}",
-			"-F",
-			"changelog=${log}",
+				curl,
+				"--fail-with-body",
+				"-sS",
+				"-X",
+				"POST",
+				"https://api.modtale.net/api/v1/projects/${cfg.projectId}/versions",
+				"-H",
+				"X-MODTALE-KEY: ${key}",
+				"-F",
+				"file=@${jar.absolutePath}",
+				"-F",
+				"versionNumber=${ext.version.get()}",
+				"-F",
+				"channel=${ext.releaseType.get()}",
+				"-F",
+				"gameVersions=${gameVersion}",
+				"-F",
+				"changelog=${log}",
 		] as List<String>
 
 		cfg.dependencies.each { dep ->

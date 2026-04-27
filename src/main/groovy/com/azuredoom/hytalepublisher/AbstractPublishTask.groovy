@@ -41,6 +41,11 @@ abstract class AbstractPublishTask extends DefaultTask {
 		return new CredentialResolver(keyProperties)
 	}
 
+	protected String resolveGameVersion(String patchline) {
+		String configured = publishExtension.gameVersion.get()
+		return HytaleVersionResolver.resolve(project, configured, patchline)
+	}
+
 	protected static void exec(List<String> args) {
 		def command = args.collect { it.toString() }
 
@@ -60,8 +65,8 @@ abstract class AbstractPublishTask extends DefaultTask {
 
 		if (exitCode != 0) {
 			throw new GradleException(
-			"[HytalePublisher] Upload failed with exit code ${exitCode}.\n\n" +
-			output.toString()
+					"[HytalePublisher] Upload failed with exit code ${exitCode}.\n\n" +
+							output.toString()
 			)
 		}
 
