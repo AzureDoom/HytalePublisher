@@ -12,7 +12,7 @@ It provides a single Gradle DSL for configuring release metadata, platform-speci
 
 ## Features
 
-- Publish Hytale mods to Modtale, CurseForge, and Modifold
+- Publish Hytale mods to Modtale, CurseForge, Modifold, and Thunderstore
 - Enable only the publishing targets you need
 - Configure shared release metadata with sensible platform-specific defaults
 - Read API keys from `key.properties` or environment variables
@@ -64,6 +64,7 @@ Do not commit this file. HytalePublisher will automatically add `key.properties`
 modTaleKey=your-modtale-api-key
 curseKey=your-curseforge-api-token
 modifoldKey=your-modifold-bearer-token
+thunderstoreToken=your-thunderstore-service-account-token
 ```
 
 Project IDs should be configured in the Gradle DSL, not in `key.properties`.
@@ -72,16 +73,18 @@ You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
 - CurseForge: https://legacy.curseforge.com/account/api-tokens
 - Modifold: https://modifold.com/settings/api
+- Thunderstore: <https://thunderstore.io/settings/teams/> -> [your team] -> Service Accounts -> Add service account
 
 ### Environment variable support
 
 Credentials can also be provided through environment variables. This is recommended for CI/CD workflows.
 
-| Platform   | `key.properties` key | Environment variable |
-|------------|----------------------|----------------------|
-| Modtale    | `modTaleKey`         | `MODTALE_KEY`        |
-| CurseForge | `curseKey`           | `CURSE_KEY`          |
-| Modifold   | `modifoldKey`        | `MODIFOLD_KEY`       |
+| Platform     | `key.properties` key | Environment variable |
+|--------------|----------------------|----------------------|
+| Modtale      | `modTaleKey`         | `MODTALE_KEY`        |
+| CurseForge   | `curseKey`           | `CURSE_KEY`          |
+| Modifold     | `modifoldKey`        | `MODIFOLD_KEY`       |
+| Thunderstore | `thunderstoreToken`  | `TCLI_AUTH_TOKEN`    |
 
 ---
 
@@ -146,6 +149,50 @@ hytalePublisher {
         optional     "prettier-than-before"
         incompatible "broken-mod"
         embedded     "bundled-helper", "abc123"
+    }
+
+    thunderstore {
+      enabled    = true
+  
+      // Required: the Thunderstore team (namespace) you upload under
+      namespace  = "YourTeam"
+  
+      // Optional: defaults to project.name with spaces -> underscores
+      // packageName = "Your_Mod_Name"
+  
+      // Optional: defaults to project.description, max 250 chars
+      // description = "A short description of the mod."
+  
+      // Defaults to "hytale" — the Thunderstore community slug for Hytale
+      // community = "hytale"
+  
+      // Tag the package per the Hytale community categories. Browse at
+      // https://thunderstore.io/api/experimental/community/hytale/category/
+      categories = ["plugins", "mods", "release"]
+  
+      // Required by Thunderstore TOS if applicable
+      // hasNsfwContent = false
+  
+      // Dependencies in Thunderstore "Namespace-PackageName-Version" format
+      dependency "Hytale", "HytaleAPI", "8.8.1"
+      dependency "Hytale-HytaleAPI-8.8.1"  // alternative single-string form
+  
+      // --- Content bundling -------------------------------------------------
+      // Each helper places a file/folder into the Thunderstore-required folder
+      // structure inside the package zip:
+      //
+      //   plugin(path)      -> mods/<name>.jar
+      //   earlyPlugin(path) -> earlyplugins/<name>.jar
+      //   assetPack(path)   -> mods/<name>.zip
+      //   world(path)       -> worlds/<dir>
+      //   universe(path)    -> universes/<dir>
+      //   save(path)        -> saves/<dir>
+      //
+      // If you don't call any of these, the plugin's built jar is auto-placed
+      // into mods/ — matching the Hytale Modding Thunderstore plugin guide.
+      //
+      // plugin "build/libs/MyMod-${project.version}.jar"
+      // world  "src/main/resources/worlds/my-cool-world"
     }
 }
 ```
@@ -389,6 +436,7 @@ jobs:
       MODTALE_KEY: ${{ secrets.MODTALE_KEY }}
       CURSE_KEY: ${{ secrets.CURSE_KEY }}
       MODIFOLD_KEY: ${{ secrets.MODIFOLD_KEY }}
+      TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
 
     steps:
       - name: Checkout repository
@@ -491,12 +539,13 @@ Each publish task uses the JAR built by the subproject where the plugin is appli
 
 ## Tasks
 
-| Task                  | Description                                       | Registered when                  |
-|-----------------------|---------------------------------------------------|----------------------------------|
-| `publishToModtale`    | Uploads the built JAR and changelog to Modtale    | `modtale.enabled = true`         |
-| `publishToCurseForge` | Uploads the built JAR and changelog to CurseForge | `curseforge.enabled = true`      |
-| `publishToModifold`   | Uploads the built JAR and changelog to Modifold   | `modifold.enabled = true`        |
-| `publishAll`          | Runs all enabled publishing tasks                 | At least one platform is enabled |
+| Task                    | Description                                                         | Registered when                  |
+|-------------------------|---------------------------------------------------------------------|----------------------------------|
+| `publishToModtale`      | Uploads the built JAR and changelog to Modtale                      | `modtale.enabled = true`         |
+| `publishToCurseForge`   | Uploads the built JAR and changelog to CurseForge                   | `curseforge.enabled = true`      |
+| `publishToModifold`     | Uploads the built JAR and changelog to Modifold                     | `modifold.enabled = true`        |
+| `publishToThunderstore` | Builds a Thunderstore package zip and uploads it to thunderstore.io | `thunderstore.enabled = true`    |
+| `publishAll`            | Runs all enabled publishing tasks                                   | At least one platform is enabled |
 
 ---
 
@@ -550,6 +599,27 @@ You can get your API from the following links:
     - `incompatible(slug, versionId?)` — this build is incompatible with the dependency
     - `embedded(slug, versionId?)` — the dependency is bundled inside this build
 - The `versionId` argument is optional; omit it to allow any version of the dependency
+
+### Thunderstore
+
+- Authentication uses **Thunderstore service-account API tokens**, not your user account. Generate one at: `thunderstore.io -> Settings -> Teams -> [your team] -> Service Accounts`.
+- The package version must be SemVer (`MAJOR.MINOR.PATCH`). If your project version includes a qualifier like `-beta`, the plugin strips it for the Thunderstore manifest. Once a version is uploaded it cannot be reused, bump your version for every release.
+- The plugin auto-generates `manifest.json` inside the zip from your DSL.
+  You don't need to maintain a manifest in your repo, but you DO need:
+  - `icon.png` (256x256 PNG) at the project root
+  - `README.md` at the project root
+    ...both are required by Thunderstore.
+- If `hytalePublisher.changelogFile` exists at its configured path, it is bundled as `CHANGELOG.md` inside the package zip. Thunderstore renders it on the package page.
+- The Hytale community slug is `hytale`. Browse available category slugs at:
+  https://thunderstore.io/api/experimental/community/hytale/category/
+- Content folder conventions match the Hytale Modding Thunderstore guides:
+  - Plugins (.jar)        -> `mods/`
+  - Early plugins (.jar)  -> `earlyplugins/`
+  - Asset packs (.zip)    -> `mods/`
+  - Worlds                -> `worlds/`
+  - Universes             -> `universes/`
+  - Saves                 -> `saves/`
+- Once a package is uploaded, its `name` and `team` are immutable. Triple check both before your first publish.
 
 ---
 

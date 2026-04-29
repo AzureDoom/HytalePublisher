@@ -15,6 +15,7 @@ class HytalePublisherExtension {
 	final ModtaleConfig    modtale
 	final CurseForgeConfig curseforge
 	final ModifoldConfig   modifold
+	final ThunderstoreConfig thunderstore
 
 	@Inject
 	HytalePublisherExtension(Project project) {
@@ -31,9 +32,10 @@ class HytalePublisherExtension {
 				)
 		changelogFile = objects.property(String).convention("changelog.md")
 
-		modtale    = objects.newInstance(ModtaleConfig)
-		curseforge = objects.newInstance(CurseForgeConfig)
-		modifold   = objects.newInstance(ModifoldConfig)
+		modtale      = objects.newInstance(ModtaleConfig)
+		curseforge   = objects.newInstance(CurseForgeConfig)
+		modifold     = objects.newInstance(ModifoldConfig)
+		thunderstore = objects.newInstance(ThunderstoreConfig)
 	}
 
 	void modtale(Action<ModtaleConfig> action)       {
@@ -44,6 +46,9 @@ class HytalePublisherExtension {
 	}
 	void modifold(Action<ModifoldConfig> action)     {
 		action.execute(modifold)
+	}
+	void thunderstore(Action<ThunderstoreConfig> action) {
+		action.execute(thunderstore)
 	}
 }
 
@@ -128,5 +133,74 @@ class ModifoldDependency {
 		this.slug      = slug
 		this.type      = type
 		this.versionId = versionId
+	}
+}
+
+class ThunderstoreConfig {
+	boolean enabled = false
+
+	String namespace      = ""
+	String packageName    = ""
+	String description    = ""
+	String websiteUrl     = ""
+
+	String community = "hytale"
+	List<String> communities = []
+	List<String> categories  = []
+	boolean hasNsfwContent   = false
+
+	String iconFile    = ""
+	String readmeFile  = ""
+
+	String apiKeyProp  = "thunderstoreToken"
+	String apiKeyEnv   = "TCLI_AUTH_TOKEN"
+	String repository  = "https://thunderstore.io"
+
+	final List<String> dependencies   = []
+	final Map<String, List<String>> contentBundles = [:]
+	final List<String> extraIncludes  = []
+
+	void dependency(String dependencyString) {
+		dependencies << dependencyString
+	}
+
+	void dependency(String namespace, String packageName, String version) {
+		dependencies << "${namespace}-${packageName}-${version}".toString()
+	}
+
+	void plugin(String path)      {
+		addContent("mods", path)
+	}
+	void earlyPlugin(String path) {
+		addContent("earlyplugins", path)
+	}
+	void assetPack(String path)   {
+		addContent("mods", path)
+	}
+	void world(String path)       {
+		addContent("worlds", path)
+	}
+	void universe(String path)    {
+		addContent("universes", path)
+	}
+	void save(String path)        {
+		addContent("saves", path)
+	}
+
+	void content(String folder, String path) {
+		addContent(folder, path)
+	}
+
+	void include(String path) {
+		extraIncludes << path
+	}
+
+	private void addContent(String folder, String path) {
+		def list = contentBundles.get(folder)
+		if (list == null) {
+			list = []
+			contentBundles.put(folder, list)
+		}
+		list << path
 	}
 }

@@ -37,7 +37,8 @@ gradlePlugin {
 				'gradle-plugin',
 				'curseforge',
 				'modtale',
-				'modifold'
+				'modifold',
+				'thunderstore'
 			])
 		}
 	}
@@ -54,7 +55,7 @@ publishing {
 </p>
 
 <p>
-  It supports publishing to Modtale, CurseForge, and Modifold, with each platform configured independently. Only enabled platforms register publishing tasks, allowing you to publish to one or all targets in a single workflow.
+  It supports publishing to Modtale, CurseForge, Modifold, and Thunderstore.io, with each platform configured independently. Only enabled platforms register publishing tasks, allowing you to publish to one or all targets in a single workflow.
 </p>
 
 <p>

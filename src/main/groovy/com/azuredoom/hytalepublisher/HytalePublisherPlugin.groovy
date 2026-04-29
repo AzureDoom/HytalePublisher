@@ -49,10 +49,21 @@ class HytalePublisherPlugin implements Plugin<Project> {
 				}
 			}
 
+			if (extension.thunderstore.enabled) {
+				project.tasks.register("publishToThunderstore", ThunderstorePublishTask) {
+					group = "publishing"
+					description = "Builds a Thunderstore package and uploads it to thunderstore.io."
+					dependsOn project.tasks.named("build")
+					keyProperties = props
+					publishExtension = extension
+				}
+			}
+
 			def enabledTasks = []
-			if (extension.modtale.enabled)    enabledTasks << "publishToModtale"
-			if (extension.curseforge.enabled) enabledTasks << "publishToCurseForge"
-			if (extension.modifold.enabled)   enabledTasks << "publishToModifold"
+			if (extension.modtale.enabled)      enabledTasks << "publishToModtale"
+			if (extension.curseforge.enabled)   enabledTasks << "publishToCurseForge"
+			if (extension.modifold.enabled)     enabledTasks << "publishToModifold"
+			if (extension.thunderstore.enabled) enabledTasks << "publishToThunderstore"
 
 			if (!enabledTasks.isEmpty()) {
 				project.tasks.register("publishAll") {
