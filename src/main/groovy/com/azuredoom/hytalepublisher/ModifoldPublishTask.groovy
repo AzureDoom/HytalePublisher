@@ -22,7 +22,6 @@ class ModifoldPublishTask extends AbstractPublishTask {
 
 		def args = [
 			curl,
-			"-f",
 			"-sS",
 			"-X",
 			"POST",

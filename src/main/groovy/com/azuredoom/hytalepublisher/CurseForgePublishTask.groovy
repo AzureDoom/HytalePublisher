@@ -40,7 +40,6 @@ class CurseForgePublishTask extends AbstractPublishTask {
 
 		exec([
 			curl,
-			"-f",
 			"-sS",
 			"-X",
 			"POST",

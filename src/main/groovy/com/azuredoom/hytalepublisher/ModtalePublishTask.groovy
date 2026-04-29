@@ -22,7 +22,6 @@ class ModtalePublishTask extends AbstractPublishTask {
 
 		def args = [
 			curl,
-			"--fail-with-body",
 			"-sS",
 			"-X",
 			"POST",
