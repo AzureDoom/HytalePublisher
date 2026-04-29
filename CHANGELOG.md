@@ -1,4 +1,5 @@
-v1.0.1
+v1.1.0
 
-- Adds dynamic selectors support for Modtale, along with a patchline of its own. Should be better when Modtale supports all versions better
-- Update Modifold to support it's new dependencies system
+- Adds Thunderstore publishing support via `publishToThunderstore` and the new `thunderstore { ... }` DSL block.
+- Auto-bundles the project's built jar into `mods/` when no content is configured, matching the Hytale Modding Thunderstore plugin guide.
+- Includes content helpers for plugins, early plugins, asset packs, worlds, universes, and saves so each Hytale content type is one DSL call.
