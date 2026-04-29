@@ -159,6 +159,9 @@ hytalePublisher {
   
       // Optional: defaults to project.name with spaces -> underscores
       // packageName = "Your_Mod_Name"
+      
+      // Optional
+      // websiteUrl = "link_to_your_sources"
   
       // Optional: defaults to project.description, max 250 chars
       // description = "A short description of the mod."
