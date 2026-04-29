@@ -24,14 +24,19 @@ class CurseForgePublishTask extends AbstractPublishTask {
 			[slug: dep.id, type: dep.optional ? "optionalDependency" : "requiredDependency"]
 		}
 
-		def metadata = JsonOutput.toJson([
+		def metadataMap = [
 			changelog    : log,
 			changelogType: "markdown",
 			displayName  : "${project.name} ${ext.version.get()}",
 			gameVersions : cfg.gameVersionIds,
-			releaseType  : ext.releaseType.get().toLowerCase(),
-			relations    : [projects: deps]
-		])
+			releaseType  : ext.releaseType.get().toLowerCase()
+		]
+
+		if (!deps.isEmpty()) {
+			metadataMap.relations = [projects: deps]
+		}
+
+		def metadata = JsonOutput.toJson(metadataMap)
 
 		exec([
 			curl,
