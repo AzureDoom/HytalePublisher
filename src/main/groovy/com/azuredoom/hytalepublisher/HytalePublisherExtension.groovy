@@ -27,7 +27,7 @@ class HytalePublisherExtension {
 				project.provider {
 					project.hasProperty("hytale_version")
 							? project.property("hytale_version").toString()
-							: "Early Access"
+							: ""
 				}
 				)
 		changelogFile = objects.property(String).convention("changelog.md")
@@ -36,6 +36,13 @@ class HytalePublisherExtension {
 		curseforge   = objects.newInstance(CurseForgeConfig)
 		modifold     = objects.newInstance(ModifoldConfig)
 		thunderstore = objects.newInstance(ThunderstoreConfig)
+
+		def defaultPatchline = project.hasProperty("patchline")
+				? project.property("patchline").toString()
+				: "release"
+
+		modtale.patchline = defaultPatchline
+		modifold.patchline = defaultPatchline
 	}
 
 	void modtale(Action<ModtaleConfig> action)       {
@@ -102,10 +109,13 @@ class ModifoldConfig {
 	boolean enabled = false
 	String projectId = ""
 	String apiKeyProp = "modifoldKey"
-	String apiKeyEnv  = "MODIFOLD_KEY"
-	List<String> loaders      = ["vanilla"]
-	List<String> gameVersions = ["Early Access"]
-	final List<ModifoldDependency> dependencies = []
+	String apiKeyEnv = "MODIFOLD_KEY"
+	List loaders = ["Vanilla"]
+	List gameVersions = []
+
+	String patchline = "release"
+
+	final List dependencies = []
 
 	void required(String slug, String versionId = null) {
 		dependencies << new ModifoldDependency(slug, "required", versionId)

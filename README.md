@@ -138,10 +138,17 @@ hytalePublisher {
         enabled   = true
         projectId = "your-modifold-project-slug"
 
-        // Optional metadata overrides
-        // Must be lists — automatically converted to JSON arrays for the API
-        // loaders      = ["vanilla"]
-        // gameVersions = [project.hytale_version]
+        // Must exactly match the game version names shown by Hytale / Modifold.
+        // Can contain one or many supported versions.
+        gameVersions = [
+                "0.5.0-pre.9.1",
+                "0.5.0-pre.9",
+                "0.5.0-pre.8",
+                "2026.05.07-5efa15f6d"
+        ]
+  
+        // Must be a list; automatically JSON-encoded for the API.
+        loaders = ["Vanilla"]
 
         // Dependencies: required / optional / incompatible / embedded
         // Second argument is an optional Modifold version_id; omit for "any version"
@@ -594,7 +601,11 @@ You can get your API from the following links:
 
 ### Modifold
 
-- `gameVersions` and `loaders` must be arrays
+- `gameVersions` and `loaders` must be arrays.
+- `gameVersions` must contain exact Hytale game version names, for example `0.5.0-pre.9.1`.
+- The old `Early Access` version category is no longer valid.
+- If `modifold.gameVersions` is omitted, the plugin falls back to `hytalePublisher.gameVersion` / `project.hytale_version`.
+- Multiple supported game versions can be uploaded at once.
 - These are automatically JSON-encoded by the plugin
 - Supports four dependency types via the DSL:
     - `required(slug, versionId?)` — the dependency is required for this build to work
