@@ -73,7 +73,7 @@ You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
 - CurseForge: https://legacy.curseforge.com/account/api-tokens
 - Modifold: https://modifold.com/settings/api
-- Thunderstore: <https://thunderstore.io/settings/teams/> -> [your team] -> Service Accounts -> Add service account
+- Thunderstore: <https://thunderstore.io/settings/teams/> → [your team] → Service Accounts → Add service account
 
 ### Environment variable support
 
