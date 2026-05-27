@@ -462,7 +462,10 @@ jobs:
         uses: gradle/actions/setup-gradle@v5
 
       - name: Publish enabled platforms
-        run: ./gradlew publishAll
+        run: |
+          chmod +x ./gradlew
+          ls -l ./gradlew
+          ./gradlew publishAll
 ```
 
 Only platforms with `enabled = true` will publish. Store API keys as repository or organization secrets.
