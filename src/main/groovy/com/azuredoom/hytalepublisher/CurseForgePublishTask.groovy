@@ -37,9 +37,12 @@ class CurseForgePublishTask extends AbstractPublishTask {
 		}
 
 		def metadata = JsonOutput.toJson(metadataMap)
+		def metadataFile = File.createTempFile("hytalepublisher-curseforge-metadata-", ".json")
+		metadataFile.text = metadata
 
 		exec([
 			curl,
+			"-f",
 			"-sS",
 			"-X",
 			"POST",
@@ -47,7 +50,7 @@ class CurseForgePublishTask extends AbstractPublishTask {
 			"-H",
 			"X-Api-Token: ${key}",
 			"-F",
-			"metadata=${metadata};type=application/json",
+			"metadata=<${metadataFile.absolutePath};type=application/json",
 			"-F",
 			"file=@${jar.absolutePath}"
 		])
