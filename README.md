@@ -574,7 +574,7 @@ API key property names and environment variable names can be customized in the D
 
 You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
-- CurseForge: https://legacy.curseforge.com/account/api-tokens
+- CurseForge: https://authors.curseforge.com/#/settings/api-tokens
 - Modifold: https://modifold.com/settings/api
 
 ---
