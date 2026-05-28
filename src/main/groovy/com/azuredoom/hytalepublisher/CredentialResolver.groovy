@@ -2,6 +2,7 @@ package com.azuredoom.hytalepublisher
 
 import org.gradle.api.GradleException
 
+@SuppressWarnings("unused")
 class CredentialResolver {
 
 	private final Properties fileProps

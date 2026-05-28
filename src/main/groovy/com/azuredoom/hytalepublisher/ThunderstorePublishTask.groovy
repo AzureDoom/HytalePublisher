@@ -345,7 +345,7 @@ abstract class ThunderstorePublishTask extends AbstractPublishTask {
 		}
 		return byteArryOutputStream.toByteArray()
 	}
-}
+
 	private static void copyDirectory(File source, File target) {
 		Path sourcePath = source.toPath()
 		Path targetPath = target.toPath()

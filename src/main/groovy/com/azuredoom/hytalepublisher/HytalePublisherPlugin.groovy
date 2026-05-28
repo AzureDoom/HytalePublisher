@@ -3,6 +3,7 @@ package com.azuredoom.hytalepublisher
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
+@SuppressWarnings("unused")
 class HytalePublisherPlugin implements Plugin<Project> {
 	@Override
 	void apply(Project project) {

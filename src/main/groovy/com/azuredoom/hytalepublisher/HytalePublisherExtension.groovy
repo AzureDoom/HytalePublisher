@@ -6,6 +6,7 @@ import org.gradle.api.provider.Property
 
 import javax.inject.Inject
 
+@SuppressWarnings("unused")
 class HytalePublisherExtension {
 	final Property<String> version
 	final Property<String> releaseType
@@ -71,6 +72,7 @@ class Dependency {
 	}
 }
 
+@SuppressWarnings("unused")
 class ModtaleConfig {
 	boolean enabled = false
 	String projectId = ""
@@ -88,6 +90,7 @@ class ModtaleConfig {
 	}
 }
 
+@SuppressWarnings("unused")
 class CurseForgeConfig {
 	boolean enabled = false
 	String projectId = ""
@@ -105,6 +108,7 @@ class CurseForgeConfig {
 	}
 }
 
+@SuppressWarnings("unused")
 class ModifoldConfig {
 	boolean enabled = false
 	String projectId = ""
@@ -146,6 +150,7 @@ class ModifoldDependency {
 	}
 }
 
+@SuppressWarnings("unused")
 class ThunderstoreConfig {
 	boolean enabled = false
 
