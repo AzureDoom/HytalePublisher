@@ -1,3 +1,4 @@
-v1.1.2
+v1.1.5
 
-- Show full responses of CurseForge, Modtale and Modifold api responses to help with troubleshooting.
+- Makes plugin Gradle 10 compatible.
+- Updates HytaleVersionResolver to use non-deprecated new URL
