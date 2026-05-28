@@ -1,16 +1,19 @@
 package com.azuredoom.hytalepublisher
 
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Publishing uploads files to Modtale and should always execute when requested.")
-class ModtalePublishTask extends AbstractPublishTask {
+abstract class ModtalePublishTask extends AbstractPublishTask {
+
+	@Internal
+	ModtaleConfig modtaleConfig
 
 	@TaskAction
 	void publish() {
-		def ext  = publishExtension
-		def cfg  = ext.modtale
+		def cfg = modtaleConfig
 
 		if (!cfg.projectId) throw new GradleException("[HytalePublisher] modtale.projectId must be set.")
 
@@ -31,9 +34,9 @@ class ModtalePublishTask extends AbstractPublishTask {
 			"-F",
 			"file=@${jar.absolutePath}",
 			"-F",
-			"versionNumber=${ext.version.get()}",
+			"versionNumber=${projectVersion.get()}",
 			"-F",
-			"channel=${ext.releaseType.get()}",
+			"channel=${releaseType.get()}",
 			"-F",
 			"gameVersions=${gameVersion}",
 			"-F",
@@ -48,6 +51,6 @@ class ModtalePublishTask extends AbstractPublishTask {
 		}
 
 		exec(args)
-		logger.lifecycle("[HytalePublisher] Successfully published to Modtale: ${project.name} ${ext.version.get()}")
+		logger.lifecycle("[HytalePublisher] Successfully published to Modtale: ${projectName.get()} ${projectVersion.get()}")
 	}
 }

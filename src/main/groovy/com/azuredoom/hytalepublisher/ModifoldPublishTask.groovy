@@ -2,16 +2,19 @@ package com.azuredoom.hytalepublisher
 
 import groovy.json.JsonOutput
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Publishing uploads files to Modifold and should always execute when requested.")
-class ModifoldPublishTask extends AbstractPublishTask {
+abstract class ModifoldPublishTask extends AbstractPublishTask {
+
+	@Internal
+	ModifoldConfig modifoldConfig
 
 	@TaskAction
 	void publish() {
-		def ext = publishExtension
-		def cfg = ext.modifold
+		def cfg = modifoldConfig
 
 		if (!cfg.projectId) {
 			throw new GradleException("[HytalePublisher] modifold.projectId must be set.")
@@ -44,11 +47,11 @@ class ModifoldPublishTask extends AbstractPublishTask {
 			"-F",
 			"file=@${jar.absolutePath}",
 			"-F",
-			"version_number=${ext.version.get()}",
+			"version_number=${projectVersion.get()}",
 			"-F",
 			"changelog=${log}",
 			"-F",
-			"release_channel=${ext.releaseType.get().toLowerCase()}",
+			"release_channel=${releaseType.get().toLowerCase()}",
 			"-F",
 			"game_versions=${JsonOutput.toJson(gameVersions)}",
 			"-F",
@@ -59,14 +62,14 @@ class ModifoldPublishTask extends AbstractPublishTask {
 
 		exec(args)
 
-		logger.lifecycle("[HytalePublisher] Successfully published to Modifold: ${project.name} ${ext.version.get()}")
+		logger.lifecycle("[HytalePublisher] Successfully published to Modifold: ${projectName.get()} ${projectVersion.get()}")
 	}
 
 	private List<String> resolveModifoldGameVersions(ModifoldConfig cfg) {
 		def configured = cfg.gameVersions.collect { it.toString().trim() }.findAll { !it.isEmpty() }
 
 		if (configured.isEmpty()) {
-			def fallback = publishExtension.gameVersion.get()?.toString()?.trim()
+			def fallback = gameVersion.get()?.toString()?.trim()
 
 			if (!fallback) {
 				throw new GradleException(
@@ -76,7 +79,7 @@ class ModifoldPublishTask extends AbstractPublishTask {
 			}
 
 			configured = [
-				HytaleVersionResolver.resolve(project, fallback, cfg.patchline)
+				HytaleVersionResolver.resolve(versionCacheDirectory.get().asFile, logger, fallback, cfg.patchline)
 			]
 		}
 

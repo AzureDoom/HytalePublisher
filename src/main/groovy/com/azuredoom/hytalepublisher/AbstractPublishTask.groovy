@@ -2,7 +2,11 @@ package com.azuredoom.hytalepublisher
 
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.internal.os.OperatingSystem
 import org.gradle.work.DisableCachingByDefault
 
@@ -12,17 +16,44 @@ abstract class AbstractPublishTask extends DefaultTask {
 	@Internal
 	Properties keyProperties = new Properties()
 
+	@Input
+	abstract Property<String> getProjectName()
+
+	@Input
+	abstract Property<String> getProjectVersion()
+
+	@Input
+	abstract Property<String> getReleaseType()
+
+	@Input
+	abstract Property<String> getGameVersion()
+
+	@Input
+	abstract Property<String> getChangelogFile()
+
+	@Input
+	@Optional
+	abstract Property<String> getProjectDescription()
+
 	@Internal
-	HytalePublisherExtension publishExtension
+	abstract DirectoryProperty getProjectDirectory()
+
+	@Internal
+	abstract DirectoryProperty getRootDirectory()
+
+	@Internal
+	abstract DirectoryProperty getBuildDirectory()
+
+	@Internal
+	abstract DirectoryProperty getVersionCacheDirectory()
 
 	protected static String curlExe() {
 		OperatingSystem.current().isWindows() ? "C:/Windows/System32/curl.exe" : "curl"
 	}
 
 	protected File resolveJar() {
-		def ext = publishExtension
-		def jarFile = project.layout.buildDirectory
-				.file("libs/${project.name}-${ext.version.get()}.jar")
+		def jarFile = buildDirectory
+				.file("libs/${projectName.get()}-${projectVersion.get()}.jar")
 				.get().asFile
 
 		if (!jarFile.exists()) {
@@ -33,8 +64,7 @@ abstract class AbstractPublishTask extends DefaultTask {
 	}
 
 	protected String readChangelog() {
-		def ext = publishExtension
-		return project.rootProject.file(ext.changelogFile.get()).text
+		return new File(rootDirectory.get().asFile, changelogFile.get()).text
 	}
 
 	protected CredentialResolver credentials() {
@@ -42,8 +72,18 @@ abstract class AbstractPublishTask extends DefaultTask {
 	}
 
 	protected String resolveGameVersion(String patchline) {
-		String configured = publishExtension.gameVersion.get()
-		return HytaleVersionResolver.resolve(project, configured, patchline)
+		String configured = gameVersion.get()
+		return HytaleVersionResolver.resolve(versionCacheDirectory.get().asFile, logger, configured, patchline)
+	}
+
+	protected File projectFile(String path) {
+		File file = new File(path)
+		return file.absolute ? file : new File(projectDirectory.get().asFile, path)
+	}
+
+	protected File rootFile(String path) {
+		File file = new File(path)
+		return file.absolute ? file : new File(rootDirectory.get().asFile, path)
 	}
 
 	protected static void exec(List<String> args) {

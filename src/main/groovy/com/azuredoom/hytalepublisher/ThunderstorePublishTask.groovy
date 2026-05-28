@@ -3,6 +3,7 @@ package com.azuredoom.hytalepublisher
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
@@ -13,30 +14,32 @@ import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 
 @DisableCachingByDefault(because = "Publishing uploads files to Thunderstore and should always execute when requested.")
-class ThunderstorePublishTask extends AbstractPublishTask {
+abstract class ThunderstorePublishTask extends AbstractPublishTask {
 
 	private static final long DEFAULT_PART_SIZE = 1024L * 1024L * 50L
 
+	@Internal
+	ThunderstoreConfig thunderstoreConfig
+
 	@TaskAction
 	void publish() {
-		def ext = publishExtension
-		def cfg = ext.thunderstore
+		def cfg = thunderstoreConfig
 
 		validate(cfg)
 
 		def key = credentials().require(cfg.apiKeyProp, cfg.apiKeyEnv, "Thunderstore API token")
 
-		def packageVersion = resolvePackageVersion(ext)
+		def packageVersion = resolvePackageVersion()
 		def packageName    = resolvePackageName(cfg)
 
-		def stagingDir = project.layout.buildDirectory
+		def stagingDir = buildDirectory
 				.dir("hytale-publisher/thunderstore")
 				.get().asFile
-		stagingDir.deleteDir()
+		deleteDirectory(stagingDir)
 		stagingDir.mkdirs()
 
-		writeManifest(stagingDir, ext, cfg, packageName, packageVersion)
-		copyRequiredFiles(stagingDir, ext, cfg)
+		writeManifest(stagingDir, cfg, packageName, packageVersion)
+		copyRequiredFiles(stagingDir, cfg)
 		copyContentBundles(stagingDir, cfg)
 		copyExtras(stagingDir, cfg)
 
@@ -60,7 +63,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 		if (communities.unique().isEmpty()) {
 			errors << "thunderstore.community must be set (e.g. \"hytale\")."
 		}
-		def name = cfg.packageName ?: project.name
+		def name = cfg.packageName ?: projectName.get()
 		if (name && (name.contains(' ') || !(name ==~ /^[A-Za-z0-9_]+$/))) {
 			errors << "thunderstore.packageName must be alphanumeric + underscores, no spaces. Got: '${name}'"
 		}
@@ -74,8 +77,8 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 		}
 	}
 
-	private static String resolvePackageVersion(HytalePublisherExtension ext) {
-		def v = ext.version.get()
+	private String resolvePackageVersion() {
+		def v = projectVersion.get()
 		if (!v || v == "unspecified") {
 			throw new GradleException(
 			"[HytalePublisher] No version configured. Set project.version or hytalePublisher.version."
@@ -91,26 +94,25 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 	}
 
 	private String resolvePackageName(ThunderstoreConfig cfg) {
-		def n = cfg.packageName ?: project.name
+		def n = cfg.packageName ?: projectName.get()
 		return n.replaceAll(/\s+/, "_")
 	}
 
-	private void writeManifest(File staging, HytalePublisherExtension ext, ThunderstoreConfig cfg,
-			String packageName, String packageVersion) {
+	private void writeManifest(File staging, ThunderstoreConfig cfg, String packageName, String packageVersion) {
 		def manifest = [
 			name           : packageName,
 			version_number : packageVersion,
 			website_url    : cfg.websiteUrl ?: "",
-			description    : cfg.description ?: project.description ?: "",
+			description    : cfg.description ?: projectDescription.orNull ?: "",
 			dependencies   : cfg.dependencies ?: []
 		]
 		new File(staging, "manifest.json").text = JsonOutput.prettyPrint(JsonOutput.toJson(manifest))
 	}
 
-	private void copyRequiredFiles(File staging, HytalePublisherExtension ext, ThunderstoreConfig cfg) {
+	private void copyRequiredFiles(File staging, ThunderstoreConfig cfg) {
 		def iconSource = cfg.iconFile
-				? project.file(cfg.iconFile)
-				: project.file("icon.png")
+				? projectFile(cfg.iconFile)
+				: projectFile("icon.png")
 		if (!iconSource.exists()) {
 			throw new GradleException(
 			"[HytalePublisher] Required icon.png not found at: ${iconSource.absolutePath}. " +
@@ -122,8 +124,8 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 				StandardCopyOption.REPLACE_EXISTING)
 
 		def readmeSource = cfg.readmeFile
-				? project.file(cfg.readmeFile)
-				: project.file("README.md")
+				? projectFile(cfg.readmeFile)
+				: projectFile("README.md")
 		if (!readmeSource.exists()) {
 			throw new GradleException(
 			"[HytalePublisher] Required README.md not found at: ${readmeSource.absolutePath}. " +
@@ -134,7 +136,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 				new File(staging, "README.md").toPath(),
 				StandardCopyOption.REPLACE_EXISTING)
 
-		def changelogSource = project.rootProject.file(ext.changelogFile.get())
+		def changelogSource = rootFile(changelogFile.get())
 		if (changelogSource.exists()) {
 			Files.copy(changelogSource.toPath(),
 					new File(staging, "CHANGELOG.md").toPath(),
@@ -149,7 +151,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 			def folderDir = new File(staging, folder)
 			folderDir.mkdirs()
 			paths.each { p ->
-				def source = project.file(p)
+				def source = projectFile(p)
 				if (!source.exists()) {
 					throw new GradleException(
 					"[HytalePublisher] Thunderstore content path not found: ${source.absolutePath}"
@@ -160,10 +162,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 							new File(folderDir, source.name).toPath(),
 							StandardCopyOption.REPLACE_EXISTING)
 				} else {
-					project.copy {
-						from source
-						into new File(folderDir, source.name)
-					}
+					copyDirectory(source, new File(folderDir, source.name))
 				}
 			}
 		}
@@ -182,7 +181,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 
 	private void copyExtras(File staging, ThunderstoreConfig cfg) {
 		cfg.extraIncludes.each { p ->
-			def source = project.file(p)
+			def source = projectFile(p)
 			if (!source.exists()) {
 				throw new GradleException(
 				"[HytalePublisher] Thunderstore extra include not found: ${source.absolutePath}"
@@ -193,10 +192,7 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 						new File(staging, source.name).toPath(),
 						StandardCopyOption.REPLACE_EXISTING)
 			} else {
-				project.copy {
-					from source
-					into new File(staging, source.name)
-				}
+				copyDirectory(source, new File(staging, source.name))
 			}
 		}
 	}
@@ -348,5 +344,31 @@ class ThunderstorePublishTask extends AbstractPublishTask {
 			remaining -= read
 		}
 		return byteArryOutputStream.toByteArray()
+	}
+}
+	private static void copyDirectory(File source, File target) {
+		Path sourcePath = source.toPath()
+		Path targetPath = target.toPath()
+		Files.walk(sourcePath).withCloseable { stream ->
+			stream.each { Path path ->
+				Path relative = sourcePath.relativize(path)
+				Path destination = targetPath.resolve(relative)
+				if (Files.isDirectory(path)) {
+					Files.createDirectories(destination)
+				} else {
+					Files.createDirectories(destination.parent)
+					Files.copy(path, destination, StandardCopyOption.REPLACE_EXISTING)
+				}
+			}
+		}
+	}
+
+	private static void deleteDirectory(File directory) {
+		if (!directory.exists()) {
+			return
+		}
+		Files.walk(directory.toPath())
+				.sorted(Comparator.reverseOrder())
+				.forEach { Path path -> Files.delete(path) }
 	}
 }

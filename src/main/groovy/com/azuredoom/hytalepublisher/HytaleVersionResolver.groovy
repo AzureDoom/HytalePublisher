@@ -2,7 +2,7 @@ package com.azuredoom.hytalepublisher
 
 import groovy.xml.XmlSlurper
 import org.gradle.api.GradleException
-import org.gradle.api.Project
+import org.gradle.api.logging.Logger
 
 final class HytaleVersionResolver {
 
@@ -31,7 +31,7 @@ final class HytaleVersionResolver {
 		return false
 	}
 
-	static String resolve(Project project, String selector, String patchline) {
+	static String resolve(File cacheDir, Logger logger, String selector, String patchline) {
 		if (!isDynamicSelector(selector)) {
 			return selector
 		}
@@ -44,7 +44,7 @@ final class HytaleVersionResolver {
 		}
 
 		String repoUrl = repoUrlForPatchline(patchline)
-		List<String> versions = fetchVersions(project, repoUrl, patchline)
+		List<String> versions = fetchVersions(cacheDir, logger, repoUrl, patchline)
 		String resolved = pickVersion(selector, versions)
 
 		if (resolved == null) {
@@ -54,7 +54,7 @@ final class HytaleVersionResolver {
 			)
 		}
 
-		project.logger.lifecycle(
+		logger.lifecycle(
 				"[HytalePublisher] Resolved gameVersion '{}' to '{}' against patchline '{}'.",
 				selector, resolved, patchline)
 		return resolved
@@ -68,8 +68,7 @@ final class HytaleVersionResolver {
 		return RELEASE_REPO_URL
 	}
 
-	private static List<String> fetchVersions(Project project, String repoUrl, String patchline) {
-		File cacheDir = new File(project.gradle.gradleUserHomeDir, 'caches/hytale-publisher')
+	private static List<String> fetchVersions(File cacheDir, Logger logger, String repoUrl, String patchline) {
 		cacheDir.mkdirs()
 
 		String cacheKey = (patchline ?: 'release').trim().toLowerCase().replaceAll(/[^a-z0-9-]/, '_')
@@ -89,7 +88,7 @@ final class HytaleVersionResolver {
 				cacheFile.text = xml
 			} catch (Exception e) {
 				if (cacheFile.exists()) {
-					project.logger.warn(
+					logger.warn(
 							"[HytalePublisher] Failed to refresh Maven metadata from {}, using cached copy. ({})",
 							metadataUrl, e.message)
 					xml = cacheFile.text

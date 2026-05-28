@@ -2,16 +2,19 @@ package com.azuredoom.hytalepublisher
 
 import groovy.json.JsonOutput
 import org.gradle.api.GradleException
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.work.DisableCachingByDefault
 
 @DisableCachingByDefault(because = "Publishing uploads files to CurseForge and should always execute when requested.")
-class CurseForgePublishTask extends AbstractPublishTask {
+abstract class CurseForgePublishTask extends AbstractPublishTask {
+
+	@Internal
+	CurseForgeConfig curseforgeConfig
 
 	@TaskAction
 	void publish() {
-		def ext = publishExtension
-		def cfg = ext.curseforge
+		def cfg = curseforgeConfig
 
 		if (!cfg.projectId) throw new GradleException("[HytalePublisher] curseforge.projectId must be set.")
 
@@ -27,9 +30,9 @@ class CurseForgePublishTask extends AbstractPublishTask {
 		def metadataMap = [
 			changelog    : log,
 			changelogType: "markdown",
-			displayName  : "${project.name} ${ext.version.get()}",
+			displayName  : "${projectName.get()} ${projectVersion.get()}",
 			gameVersions : cfg.gameVersionIds,
-			releaseType  : ext.releaseType.get().toLowerCase()
+			releaseType  : releaseType.get().toLowerCase()
 		]
 
 		if (!deps.isEmpty()) {
@@ -55,6 +58,6 @@ class CurseForgePublishTask extends AbstractPublishTask {
 			"file=@${jar.absolutePath}"
 		])
 
-		logger.lifecycle("[HytalePublisher] Successfully published to CurseForge: ${project.name} ${ext.version.get()}")
+		logger.lifecycle("[HytalePublisher] Successfully published to CurseForge: ${projectName.get()} ${projectVersion.get()}")
 	}
 }
