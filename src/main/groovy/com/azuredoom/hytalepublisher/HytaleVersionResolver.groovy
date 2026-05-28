@@ -113,7 +113,7 @@ final class HytaleVersionResolver {
 	}
 
 	private static String downloadText(String urlString) {
-		def url = new URL(urlString)
+		def url = new URI(urlString).parseServerAuthority().toURL()
 		def connection = url.openConnection()
 		connection.connectTimeout = 10000
 		connection.readTimeout = 15000
