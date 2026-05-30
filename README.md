@@ -126,12 +126,15 @@ hytalePublisher {
         enabled   = true
         projectId = "123456" // Your CurseForge numeric project ID
 
-        // Optional game version ID override
+        // Optional game version ID override, only for advanced users
         // gameVersionIds = [14284]
 
-        // Dependencies: required(slug) / optional(slug)
+        // Dependencies: required / optional / embeddedLibrary / incompatible / tool
         required "levelingcore"
         optional "dynamictooltipslib"
+        embeddedLibrary "bundled-helper"
+        incompatible "broken-addon"
+        tool "dev-tooling-helper"
     }
 
     modifold {
