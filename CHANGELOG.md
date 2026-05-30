@@ -1,4 +1,7 @@
-v1.1.5
+v1.1.6
 
-- Makes plugin Gradle 10 compatible.
-- Updates HytaleVersionResolver to use non-deprecated new URL
+- Added support for additional CurseForge dependency relation types:
+    - `embeddedLibrary`
+    - `incompatible`
+    - `tool`
+- Fixed publishing failures caused by missing `changelog.md` files by creating a default Markdown changelog automatically.
