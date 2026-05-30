@@ -581,11 +581,12 @@ Each publish task uses the JAR built by the subproject where the plugin is appli
 
 ## Credential and Project ID Reference
 
-| Platform   | API key source                  | Project ID location    |
-|------------|---------------------------------|------------------------|
-| Modtale    | `modTaleKey` or `MODTALE_KEY`   | `modtale.projectId`    |
-| CurseForge | `curseKey` or `CURSE_KEY`       | `curseforge.projectId` |
-| Modifold   | `modifoldKey` or `MODIFOLD_KEY` | `modifold.projectId`   |
+| Platform     | API key source                           | Project ID location                                   |
+|--------------|------------------------------------------|-------------------------------------------------------|
+| Modtale      | `modTaleKey` or `MODTALE_KEY`            | `modtale.projectId`                                   |
+| CurseForge   | `curseKey` or `CURSE_KEY`                | `curseforge.projectId`                                |
+| Modifold     | `modifoldKey` or `MODIFOLD_KEY`          | `modifold.projectId`                                  |
+| Thunderstore | `thunderstoreToken` or `TCLI_AUTH_TOKEN` | `thunderstore.namespace` / `thunderstore.packageName` |
 
 API key property names and environment variable names can be customized in the DSL using `apiKeyProp` and `apiKeyEnv`.
 
