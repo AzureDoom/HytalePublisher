@@ -64,7 +64,7 @@ abstract class AbstractPublishTask extends DefaultTask {
 	}
 
 	protected String readChangelog() {
-		return new File(rootDirectory.get().asFile, changelogFile.get()).text
+		return resolveChangelogFile().text
 	}
 
 	protected CredentialResolver credentials() {
@@ -112,6 +112,38 @@ abstract class AbstractPublishTask extends DefaultTask {
 
 		if (output.length() > 0) {
 			println output.toString()
+		}
+	}
+
+	protected File resolveChangelogFile() {
+		File configured = rootFile(changelogFile.get())
+
+		if (configured.exists()) {
+			return configured
+		}
+
+		File matching = findCaseInsensitive(configured)
+		if (matching != null) {
+			return matching
+		}
+
+		if (configured.parentFile != null && !configured.parentFile.exists()) {
+			configured.parentFile.mkdirs()
+		}
+
+		configured.text = "# Changelog${System.lineSeparator()}${System.lineSeparator()}"
+		logger.lifecycle("[HytalePublisher] Created missing changelog file: ${configured.absolutePath}")
+		return configured
+	}
+
+	protected static File findCaseInsensitive(File file) {
+		File parent = file.parentFile
+		if (parent == null || !parent.exists() || !parent.isDirectory()) {
+			return null
+		}
+
+		return parent.listFiles()?.find { candidate ->
+			candidate.name.equalsIgnoreCase(file.name)
 		}
 	}
 }

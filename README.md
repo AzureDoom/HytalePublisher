@@ -103,7 +103,9 @@ hytalePublisher {
     // Accepts dynamic selectors like "2026.+" — see Game Version below.
     // gameVersion = project.hytale_version
 
-    changelogFile = "changelog.md"  // Relative to the root project directory
+  changelogFile = "changelog.md"  // Relative to the root project directory
+  // Created automatically if missing
+  // Existing files are matched case-insensitively, e.g. CHANGELOG.md
 
     modtale {
         enabled   = true
@@ -339,11 +341,23 @@ HytalePublisher uses `project.version` by default unless you override `hytalePub
 
 Create or update the changelog file configured by `changelogFile`.
 
-By default, HytalePublisher reads:
+By default, HytalePublisher uses:
 
 ```text
 changelog.md
 ```
+
+If the configured changelog file does not exist, HytalePublisher creates it automatically with a basic Markdown heading.
+
+Changelog file names are matched case-insensitively. For example, all of these are treated as valid matches for the default `changelog.md`:
+
+```text
+changelog.md
+CHANGELOG.md
+CHANGELOg.md
+```
+
+The path is resolved relative to the root project directory unless an absolute path is provided.
 
 ### 3. Configure the platforms you want to publish to
 
@@ -586,7 +600,9 @@ You can get your API from the following links:
 
 - `key.properties` should contain API keys only.
 - Project IDs belong in the Gradle DSL.
-- Changelog paths are resolved relative to the root project directory.
+- Changelog paths are resolved relative to the root project directory unless an absolute path is provided.
+- If the configured changelog file is missing, HytalePublisher creates it automatically.
+- Changelog file names are matched case-insensitively, so `CHANGELOG.md`, `changelog.md`, and similar capitalization variants are accepted.
 - Dependency configuration is platform-specific because each hosting service supports different dependency metadata.
 
 ---
@@ -629,7 +645,7 @@ You can get your API from the following links:
   - `icon.png` (256x256 PNG) at the project root
   - `README.md` at the project root
     ...both are required by Thunderstore.
-- If `hytalePublisher.changelogFile` exists at its configured path, it is bundled as `CHANGELOG.md` inside the package zip. Thunderstore renders it on the package page.
+- `hytalePublisher.changelogFile` is bundled as `CHANGELOG.md` inside the package zip. If the file is missing, HytalePublisher creates it automatically. Existing changelog files are matched case-insensitively.
 - The Hytale community slug is `hytale`. Browse available category slugs at:
   https://thunderstore.io/api/experimental/community/hytale/category/
 - Content folder conventions match the Hytale Modding Thunderstore guides:

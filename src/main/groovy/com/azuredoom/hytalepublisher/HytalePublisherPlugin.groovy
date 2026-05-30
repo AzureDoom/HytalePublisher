@@ -12,6 +12,7 @@ class HytalePublisherPlugin implements Plugin<Project> {
 		enforceGitignore(project)
 
 		project.afterEvaluate {
+			enforceChangelog(project, extension.changelogFile.get())
 			def keyPropsFile = new File(project.rootProject.projectDir, "key.properties")
 			def props = new Properties()
 			if (keyPropsFile.exists()) {
@@ -120,5 +121,36 @@ class HytalePublisherPlugin implements Plugin<Project> {
 			gitignore.append("${entry}\n")
 			project.logger.lifecycle("[HytalePublisher] Added '${entry}' to .gitignore.")
 		}
+	}
+
+	private static void enforceChangelog(Project project, String changelogPath) {
+		def rootDir = project.rootProject.projectDir
+		def configured = new File(changelogPath)
+
+		if (!configured.absolute) {
+			configured = new File(rootDir, changelogPath)
+		}
+
+		if (configured.exists()) {
+			return
+		}
+
+		def parent = configured.parentFile
+		if (parent != null && parent.exists() && parent.isDirectory()) {
+			def matching = parent.listFiles()?.find { candidate ->
+				candidate.name.equalsIgnoreCase(configured.name)
+			}
+
+			if (matching != null) {
+				return
+			}
+		}
+
+		if (parent != null && !parent.exists()) {
+			parent.mkdirs()
+		}
+
+		configured.text = "# Changelog${System.lineSeparator()}${System.lineSeparator()}"
+		project.logger.lifecycle("[HytalePublisher] Created missing changelog file: ${configured.absolutePath}")
 	}
 }
