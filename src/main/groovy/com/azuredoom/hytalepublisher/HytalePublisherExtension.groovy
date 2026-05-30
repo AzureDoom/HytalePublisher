@@ -97,14 +97,40 @@ class CurseForgeConfig {
 	String apiKeyProp = "curseKey"
 	String apiKeyEnv  = "CURSE_KEY"
 	List<Integer> gameVersionIds = [14284]
-	final List<Dependency> dependencies = []
+	final List dependencies = []
 
 	void required(String slug) {
-		dependencies << new Dependency(slug, null, false)
+		dependencies << new CurseForgeDependency(slug, "requiredDependency")
 	}
 
 	void optional(String slug) {
-		dependencies << new Dependency(slug, null, true)
+		dependencies << new CurseForgeDependency(slug, "optionalDependency")
+	}
+
+	void embeddedLibrary(String slug) {
+		dependencies << new CurseForgeDependency(slug, "embeddedLibrary")
+	}
+
+	void embedded(String slug) {
+		embeddedLibrary(slug)
+	}
+
+	void incompatible(String slug) {
+		dependencies << new CurseForgeDependency(slug, "incompatible")
+	}
+
+	void tool(String slug) {
+		dependencies << new CurseForgeDependency(slug, "tool")
+	}
+}
+
+class CurseForgeDependency {
+	final String slug
+	final String type
+
+	CurseForgeDependency(String slug, String type) {
+		this.slug = slug
+		this.type = type
 	}
 }
 

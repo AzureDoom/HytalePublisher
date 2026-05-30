@@ -24,7 +24,7 @@ abstract class CurseForgePublishTask extends AbstractPublishTask {
 		def curl = curlExe()
 
 		def deps = cfg.dependencies.collect { dep ->
-			[slug: dep.id, type: dep.optional ? "optionalDependency" : "requiredDependency"]
+			[slug: dep.slug, type: dep.type]
 		}
 
 		def metadataMap = [
