@@ -32,13 +32,13 @@ If needed, add the Gradle Plugin Portal to your `settings.gradle` file:
 
 ```groovy
 pluginManagement {
-    repositories {
-        gradlePluginPortal()
-        mavenLocal()
-        maven {
-            url = uri("https://maven.azuredoom.com/mods")
-        }
+  repositories {
+    gradlePluginPortal()
+    mavenLocal()
+    maven {
+      url = uri("https://maven.azuredoom.com/mods")
     }
+  }
 }
 ```
 
@@ -48,7 +48,7 @@ Add the plugin to your `build.gradle` file:
 
 ```groovy
 plugins {
-    id 'com.azuredoom.hytalepublisher' version '1.1.6'
+  id 'com.azuredoom.hytalepublisher' version '1.1.6'
 }
 ```
 
@@ -94,121 +94,121 @@ Add a `hytalePublisher` block to your `build.gradle` file.
 
 ```groovy
 hytalePublisher {
-    // Optional global release metadata
-    version       = project.version
+  // Optional global release metadata
+  version       = project.version
 
-    releaseType   = "release"       // "release" | "beta" | "alpha"
+  releaseType   = "release"       // "release" | "beta" | "alpha"
 
-    // Defaults to project.hytale_version if present.
-    // Accepts dynamic selectors like "2026.+" — see Game Version below.
-    // gameVersion = project.hytale_version
+  // Defaults to project.hytale_version if present.
+  // Accepts dynamic selectors like "0.+" — see Game Version below.
+  // gameVersion = project.hytale_version
 
   changelogFile = "changelog.md"  // Relative to the root project directory
   // Created automatically if missing
   // Existing files are matched case-insensitively, e.g. CHANGELOG.md
 
-    modtale {
-        enabled   = true
-        projectId = "your-modtale-project-id"
+  modtale {
+    enabled   = true
+    projectId = "your-modtale-project-id"
 
-        // Hytale patchline used to resolve dynamic gameVersion selectors.
-        // Has no effect when gameVersion is set to a concrete version.
-        // patchline = "release"   // or "pre-release"
+    // Hytale patchline used to resolve dynamic gameVersion selectors.
+    // Has no effect when gameVersion is set to a concrete version.
+    // patchline = "release"   // or "pre-release"
 
-        // Optional credential key overrides
-        // apiKeyProp = "modTaleKey"
-        // apiKeyEnv  = "MODTALE_KEY"
+    // Optional credential key overrides
+    // apiKeyProp = "modTaleKey"
+    // apiKeyEnv  = "MODTALE_KEY"
 
-        // Dependencies: required(modId, minVersion) / optional(modId, minVersion)
-        required "5e9bbea3-0d7f-4365-93df-5e7acfadf0e7", "1.0.4"
-        optional "2ebf130e-2189-4e90-9323-803a374d05ce", "1.5.2"
-    }
+    // Dependencies: required(modId, minVersion) / optional(modId, minVersion)
+    required "5e9bbea3-0d7f-4365-93df-5e7acfadf0e7", "1.0.4"
+    optional "2ebf130e-2189-4e90-9323-803a374d05ce", "1.5.2"
+  }
 
-    curseforge {
-        enabled   = true
-        projectId = "123456" // Your CurseForge numeric project ID
+  curseforge {
+    enabled   = true
+    projectId = "123456" // Your CurseForge numeric project ID
 
-        // Optional game version ID override, only for advanced users
-        // gameVersionIds = [14284]
+    // Optional game version ID override, only for advanced users
+    // gameVersionIds = [14284]
 
-        // Dependencies: required / optional / embeddedLibrary / incompatible / tool
-        required "levelingcore"
-        optional "dynamictooltipslib"
-        embeddedLibrary "bundled-helper"
-        incompatible "broken-addon"
-        tool "dev-tooling-helper"
-    }
+    // Dependencies: required / optional / embeddedLibrary / incompatible / tool
+    required "levelingcore"
+    optional "dynamictooltipslib"
+    embeddedLibrary "bundled-helper"
+    incompatible "broken-addon"
+    tool "dev-tooling-helper"
+  }
 
-    modifold {
-        enabled   = true
-        projectId = "your-modifold-project-slug"
+  modifold {
+    enabled   = true
+    projectId = "your-modifold-project-slug"
 
-        // Must exactly match the game version names shown by Hytale / Modifold.
-        // Can contain one or many supported versions.
-        gameVersions = [
-                "0.5.0-pre.9.1",
-                "0.5.0-pre.9",
-                "0.5.0-pre.8",
-                "2026.05.07-5efa15f6d"
-        ]
-  
-        // Must be a list; automatically JSON-encoded for the API.
-        loaders = ["Vanilla"]
+    // Must exactly match the game version names shown by Hytale / Modifold.
+    // Can contain one or many supported versions.
+    gameVersions = [
+            "0.5.0-pre.9.1",
+            "0.5.0-pre.9",
+            "0.5.0-pre.8",
+            "0.5.0-pre.7"
+    ]
 
-        // Dependencies: required / optional / incompatible / embedded
-        // Second argument is an optional Modifold version_id; omit for "any version"
-        required     "mermaids", "oCK3bg"
-        optional     "prettier-than-before"
-        incompatible "broken-mod"
-        embedded     "bundled-helper", "abc123"
-    }
+    // Must be a list; automatically JSON-encoded for the API.
+    loaders = ["Vanilla"]
 
-    thunderstore {
-      enabled    = true
-  
-      // Required: the Thunderstore team (namespace) you upload under
-      namespace  = "YourTeam"
-  
-      // Optional: defaults to project.name with spaces -> underscores
-      // packageName = "Your_Mod_Name"
-      
-      // Optional
-      // websiteUrl = "link_to_your_sources"
-  
-      // Optional: defaults to project.description, max 250 chars
-      // description = "A short description of the mod."
-  
-      // Defaults to "hytale" — the Thunderstore community slug for Hytale
-      // community = "hytale"
-  
-      // Tag the package per the Hytale community categories. Browse at
-      // https://thunderstore.io/api/experimental/community/hytale/category/
-      categories = ["plugins", "mods", "release"]
-  
-      // Required by Thunderstore TOS if applicable
-      // hasNsfwContent = false
-  
-      // Dependencies in Thunderstore "Namespace-PackageName-Version" format
-      dependency "Hytale", "HytaleAPI", "8.8.1"
-      dependency "Hytale-HytaleAPI-8.8.1"  // alternative single-string form
-  
-      // --- Content bundling -------------------------------------------------
-      // Each helper places a file/folder into the Thunderstore-required folder
-      // structure inside the package zip:
-      //
-      //   plugin(path)      -> mods/<name>.jar
-      //   earlyPlugin(path) -> earlyplugins/<name>.jar
-      //   assetPack(path)   -> mods/<name>.zip
-      //   world(path)       -> worlds/<dir>
-      //   universe(path)    -> universes/<dir>
-      //   save(path)        -> saves/<dir>
-      //
-      // If you don't call any of these, the plugin's built jar is auto-placed
-      // into mods/ — matching the Hytale Modding Thunderstore plugin guide.
-      //
-      // plugin "build/libs/MyMod-${project.version}.jar"
-      // world  "src/main/resources/worlds/my-cool-world"
-    }
+    // Dependencies: required / optional / incompatible / embedded
+    // Second argument is an optional Modifold version_id; omit for "any version"
+    required     "mermaids", "oCK3bg"
+    optional     "prettier-than-before"
+    incompatible "broken-mod"
+    embedded     "bundled-helper", "abc123"
+  }
+
+  thunderstore {
+    enabled    = true
+
+    // Required: the Thunderstore team (namespace) you upload under
+    namespace  = "YourTeam"
+
+    // Optional: defaults to project.name with spaces -> underscores
+    // packageName = "Your_Mod_Name"
+
+    // Optional
+    // websiteUrl = "link_to_your_sources"
+
+    // Optional: defaults to project.description, max 250 chars
+    // description = "A short description of the mod."
+
+    // Defaults to "hytale" — the Thunderstore community slug for Hytale
+    // community = "hytale"
+
+    // Tag the package per the Hytale community categories. Browse at
+    // https://thunderstore.io/api/experimental/community/hytale/category/
+    categories = ["plugins", "mods", "release"]
+
+    // Required by Thunderstore TOS if applicable
+    // hasNsfwContent = false
+
+    // Dependencies in Thunderstore "Namespace-PackageName-Version" format
+    dependency "Hytale", "HytaleAPI", "8.8.1"
+    dependency "Hytale-HytaleAPI-8.8.1"  // alternative single-string form
+
+    // --- Content bundling -------------------------------------------------
+    // Each helper places a file/folder into the Thunderstore-required folder
+    // structure inside the package zip:
+    //
+    //   plugin(path)      -> mods/<name>.jar
+    //   earlyPlugin(path) -> earlyplugins/<name>.jar
+    //   assetPack(path)   -> mods/<name>.zip
+    //   world(path)       -> worlds/<dir>
+    //   universe(path)    -> universes/<dir>
+    //   save(path)        -> saves/<dir>
+    //
+    // If you don't call any of these, the plugin's built jar is auto-placed
+    // into mods/ — matching the Hytale Modding Thunderstore plugin guide.
+    //
+    // plugin "build/libs/MyMod-${project.version}.jar"
+    // world  "src/main/resources/worlds/my-cool-world"
+  }
 }
 ```
 
@@ -234,26 +234,26 @@ You typically do not need to set `gameVersion` manually unless you want to overr
 
 ```groovy
 hytalePublisher {
-    gameVersion = "2026.+"   // latest 2026.x build on the configured patchline
+  gameVersion = "0.+"   // latest 0.x build on the configured patchline
 
-    modtale {
-        enabled   = true
-        projectId = "your-modtale-project-id"
-        patchline = "release"   // or "pre-release"
-    }
+  modtale {
+    enabled   = true
+    projectId = "your-modtale-project-id"
+    patchline = "release"   // or "pre-release"
+  }
 }
 ```
 
 Supported selectors:
 
-- `2026.+` — latest version starting with `2026.`
-- `2026.04.+` — latest version starting with `2026.04.` (note: prefix matching is literal, including leading zeros)
+- `0.+` — latest version starting with `0.`
+- `0.04.+` — latest version starting with `0.04.` (note: prefix matching is literal, including leading zeros)
 - `+` — absolute latest version
 - `latest.release` — same as `+`
 
-Range syntax (e.g. `[2026.0,2027.0)`) is not supported. Use a prefix selector or a concrete version instead.
+Range syntax (e.g. `[0.5,0.6)`) is not supported. Use a prefix selector or a concrete version instead.
 
-The selector is resolved at publish time by querying the Hytale Maven metadata for the configured `patchline`. The resolved concrete version (e.g. `2026.04.23-937872667`) is what gets uploaded to Modtale, so your published mod stays pinned to a specific server build.
+The selector is resolved at publish time by querying the Hytale Maven metadata for the configured `patchline`. The resolved concrete version (e.g. `0.5.4`) is what gets uploaded to Modtale, so your published mod stays pinned to a specific server build.
 
 #### Patchline scoping
 
@@ -280,7 +280,7 @@ If the network is unreachable but a cached copy exists, the resolver falls back 
 
 #### Standalone resolution
 
-Wildcard resolution does not require the [Hytale Tools](https://github.com/AzureDoom/Hytale-Gradle-Plugin) Gradle plugin to be applied. HytalePublisher fetches version metadata directly from the Hytale Maven, so you can use `2026.+` even in projects that build with a different toolchain.
+Wildcard resolution does not require the [Hytale Tools](https://github.com/AzureDoom/Hytale-Gradle-Plugin) Gradle plugin to be applied. HytalePublisher fetches version metadata directly from the Hytale Maven, so you can use `0.+` even in projects that build with a different toolchain.
 
 ---
 
@@ -289,7 +289,7 @@ Wildcard resolution does not require the [Hytale Tools](https://github.com/Azure
 For a simple setup, apply the plugin, define your Hytale version, and enable the platforms you want to publish to.
 ```groovy
 plugins {
-    id "com.azuredoom.hytalepublisher" version "1.1.6"
+  id "com.azuredoom.hytalepublisher" version "1.1.6"
 }
 
 version = "1.0.0"
@@ -297,22 +297,22 @@ version = "1.0.0"
 ext.hytale_version = "your-game-version"
 
 hytalePublisher {
-    modtale {
-        enabled = true
-        projectId = "your-modtale-project-id"
-    }
+  modtale {
+    enabled = true
+    projectId = "your-modtale-project-id"
+  }
 
-    curseforge {
-        enabled = true
-        projectId = "123456"
-    }
+  curseforge {
+    enabled = true
+    projectId = "123456"
+  }
 
-    modifold {
-        enabled = true
-        projectId = "your-modifold-project-slug"
-        gameVersions = [project.hytale_version]
-        loaders = ["vanilla"]
-    }
+  modifold {
+    enabled = true
+    projectId = "your-modifold-project-slug"
+    gameVersions = [project.hytale_version]
+    loaders = ["vanilla"]
+  }
 }
 ```
 
@@ -365,20 +365,20 @@ Enable only the platforms you want to publish this release to:
 
 ```groovy
 hytalePublisher {
-    modtale {
-        enabled = true
-        projectId = "your-modtale-project-id"
-    }
+  modtale {
+    enabled = true
+    projectId = "your-modtale-project-id"
+  }
 
-    curseforge {
-        enabled = true
-        projectId = "123456"
-    }
+  curseforge {
+    enabled = true
+    projectId = "123456"
+  }
 
-    modifold {
-        enabled = false
-        projectId = "your-modifold-project-slug"
-    }
+  modifold {
+    enabled = false
+    projectId = "your-modifold-project-slug"
+  }
 }
 ```
 
@@ -432,12 +432,27 @@ A successful `publishAll` run may look similar to this:
 [HytalePublisher] Successfully published to Modifold: Classescore 0.1.1-beta
 
 > Task :publishToModtale
+[HytalePublisher] Resolved gameVersion '0.+' to '0.5.4' against patchline 'release'.
 [HytalePublisher] Successfully published to Modtale: Classescore 0.1.1-beta
 
 > Task :publishAll
 ```
 
 Some platforms return a JSON response before the success message. This indicates the upload was accepted and processed by the platform.
+
+If a platform rejects the upload (e.g. invalid credentials, bad project ID, or a version conflict), the build fails with the HTTP status code and the full error response from the platform:
+
+```text
+> Task :publishToModtale FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':publishToModtale'.
+> [HytalePublisher] Modtale upload failed with HTTP 403.
+
+  {"detail":"You do not have permission to perform this action with the current account or API key.",...}
+```
 
 ---
 
@@ -614,8 +629,10 @@ You can get your API from the following links:
 
 - Uses `gameVersion` (defaults to `project.hytale_version`)
 - Ensure your `hytale_version` matches a valid Modtale-supported version
-- Accepts dynamic selectors like `2026.+` — see [Game Version](#game-version) for details
+- Accepts dynamic selectors like `0.+` — see [Game Version](#game-version) for details
 - Use `modtale.patchline` (`"release"` or `"pre-release"`) to scope dynamic resolution to a specific Hytale Maven repo
+- `releaseType` is automatically normalised to uppercase (`RELEASE`, `BETA`, `ALPHA`) before upload — lowercase or mixed-case values in the DSL are accepted
+- Upload failures (4xx/5xx responses) fail the build immediately with the HTTP status code and full error body, so misconfigured credentials or project IDs are caught before the success message is printed
 
 ### CurseForge
 
@@ -631,10 +648,10 @@ You can get your API from the following links:
 - Multiple supported game versions can be uploaded at once.
 - These are automatically JSON-encoded by the plugin
 - Supports four dependency types via the DSL:
-    - `required(slug, versionId?)` — the dependency is required for this build to work
-    - `optional(slug, versionId?)` — the dependency is optional
-    - `incompatible(slug, versionId?)` — this build is incompatible with the dependency
-    - `embedded(slug, versionId?)` — the dependency is bundled inside this build
+  - `required(slug, versionId?)` — the dependency is required for this build to work
+  - `optional(slug, versionId?)` — the dependency is optional
+  - `incompatible(slug, versionId?)` — this build is incompatible with the dependency
+  - `embedded(slug, versionId?)` — the dependency is bundled inside this build
 - The `versionId` argument is optional; omit it to allow any version of the dependency
 
 ### Thunderstore
