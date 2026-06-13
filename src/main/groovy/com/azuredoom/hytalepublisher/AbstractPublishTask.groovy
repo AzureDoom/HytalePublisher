@@ -115,6 +115,33 @@ abstract class AbstractPublishTask extends DefaultTask {
 		}
 	}
 
+	protected static String execCapture(List<String> args) {
+		def command = args.collect { it.toString() }
+
+		def process = new ProcessBuilder(command)
+				.redirectErrorStream(true)
+				.start()
+
+		def output = new StringBuilder()
+
+		process.inputStream.withReader { reader ->
+			reader.eachLine { line ->
+				output.append(line).append('\n')
+			}
+		}
+
+		def exitCode = process.waitFor()
+
+		if (exitCode != 0) {
+			throw new GradleException(
+			"[HytalePublisher] Upload failed with exit code ${exitCode}.\n\n" +
+			output.toString()
+			)
+		}
+
+		return output.toString()
+	}
+
 	protected File resolveChangelogFile() {
 		File configured = rootFile(changelogFile.get())
 
