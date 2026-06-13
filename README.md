@@ -48,7 +48,7 @@ Add the plugin to your `build.gradle` file:
 
 ```groovy
 plugins {
-  id 'com.azuredoom.hytalepublisher' version '1.1.6'
+  id 'com.azuredoom.hytalepublisher' version '1.1.7'
 }
 ```
 
@@ -289,7 +289,7 @@ Wildcard resolution does not require the [Hytale Tools](https://github.com/Azure
 For a simple setup, apply the plugin, define your Hytale version, and enable the platforms you want to publish to.
 ```groovy
 plugins {
-  id "com.azuredoom.hytalepublisher" version "1.1.6"
+  id "com.azuredoom.hytalepublisher" version "1.1.7"
 }
 
 version = "1.0.0"
@@ -540,7 +540,7 @@ subprojects {
 ```gradle
 plugins {
     id "java"
-    id "com.azuredoom.hytalepublisher" version "1.1.6"
+    id "com.azuredoom.hytalepublisher" version "1.1.7"
 }
 
 hytalePublisher {
