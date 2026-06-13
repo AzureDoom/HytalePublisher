@@ -30,7 +30,7 @@ abstract class ModtalePublishTask extends AbstractPublishTask {
 			"POST",
 			"https://api.modtale.net/api/v1/projects/${cfg.projectId}/versions",
 			"-H",
-			"Authorization: Bearer ${key}",
+			"X-MODTALE-KEY: ${key}",
 			"-F",
 			"file=@${jar.absolutePath}",
 			"-F",
