@@ -79,6 +79,7 @@ class ModtaleConfig {
 	String apiKeyProp = "modTaleKey"
 	String apiKeyEnv  = "MODTALE_KEY"
 	String patchline = "release"
+	boolean replaceExisting = false
 	final List<Dependency> dependencies = []
 
 	void required(String modId, String version) {

@@ -45,6 +45,10 @@ abstract class ModtalePublishTask extends AbstractPublishTask {
 			"\n%{http_code}",
 		] as List<String>
 
+		if (cfg.replaceExisting) {
+			args += ['-F', 'replaceExisting=true']
+		}
+
 		cfg.dependencies.each { dep ->
 			def entry = dep.optional
 					? "${dep.id}:${dep.version}:optional"

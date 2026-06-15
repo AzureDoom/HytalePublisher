@@ -119,6 +119,11 @@ hytalePublisher {
     // apiKeyProp = "modTaleKey"
     // apiKeyEnv  = "MODTALE_KEY"
 
+    // When true, re-uploading the same versionNumber for overlapping gameVersions
+    // replaces the existing version on those targets instead of failing.
+    // Non-overlapping targets on the old entry are not affected.
+    // replaceExisting = false
+
     // Dependencies: required(modId, minVersion) / optional(modId, minVersion)
     required "5e9bbea3-0d7f-4365-93df-5e7acfadf0e7", "1.0.4"
     optional "2ebf130e-2189-4e90-9323-803a374d05ce", "1.5.2"
@@ -633,6 +638,7 @@ You can get your API from the following links:
 - Use `modtale.patchline` (`"release"` or `"pre-release"`) to scope dynamic resolution to a specific Hytale Maven repo
 - `releaseType` is automatically normalised to uppercase (`RELEASE`, `BETA`, `ALPHA`) before upload — lowercase or mixed-case values in the DSL are accepted
 - Upload failures (4xx/5xx responses) fail the build immediately with the HTTP status code and full error body, so misconfigured credentials or project IDs are caught before the success message is printed
+- Set `replaceExisting = true` to allow re-uploading the same `versionNumber` for overlapping `gameVersions` — matching targets are replaced in place. Targets from the existing version that do not overlap are left unchanged. Defaults to `false`.
 
 ### CurseForge
 
