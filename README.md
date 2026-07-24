@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Gradle](https://img.shields.io/badge/Gradle-plugin-02303A.svg?logo=gradle)](https://gradle.org/)
 
-HytalePublisher is a Gradle plugin for publishing Hytale mods to multiple hosting platforms, including Modtale, CurseForge, and Modifold.
+HytalePublisher is a Gradle plugin for publishing Hytale mods to multiple hosting platforms, including Modtale, CurseForge, Modifold, Thunderstore, and GitHub Releases.
 
 It provides a single Gradle DSL for configuring release metadata, platform-specific publishing options, credentials, and dependencies. Each publishing platform is opt-in, so only the platforms you enable will register publish tasks.
 
@@ -12,12 +12,13 @@ It provides a single Gradle DSL for configuring release metadata, platform-speci
 
 ## Features
 
-- Publish Hytale mods to Modtale, CurseForge, Modifold, and Thunderstore
+- Publish Hytale mods to Modtale, CurseForge, Modifold, Thunderstore, and GitHub Releases
 - Enable only the publishing targets you need
 - Configure shared release metadata with sensible platform-specific defaults
 - Read API keys from `key.properties` or environment variables
 - Keep project IDs in the Gradle DSL instead of credential files
 - Define platform-specific dependencies on Modtale, CurseForge, and Modifold
+- Tag the release commit and publish a GitHub release with the jar, sources jar, and javadoc jar attached
 - Automatically run `build` before publishing
 - Use `publishAll` to publish to every enabled platform
 - Designed to support additional hosting platforms in the future
@@ -65,6 +66,7 @@ modTaleKey=your-modtale-api-key
 curseKey=your-curseforge-api-token
 modifoldKey=your-modifold-bearer-token
 thunderstoreToken=your-thunderstore-service-account-token
+githubToken=your-github-personal-access-token
 ```
 
 Project IDs should be configured in the Gradle DSL, not in `key.properties`.
@@ -74,6 +76,7 @@ You can get your API from the following links:
 - CurseForge: https://legacy.curseforge.com/account/api-tokens
 - Modifold: https://modifold.com/settings/api
 - Thunderstore: <https://thunderstore.io/settings/teams/> → [your team] → Service Accounts → Add service account
+- GitHub: <https://github.com/settings/tokens> → generate a token (classic or fine-grained) with `repo` / "Contents: Read and write" access to the target repository. In GitHub Actions, the built-in `GITHUB_TOKEN` works instead — see [CI/CD Example](#cicd-example).
 
 ### Environment variable support
 
@@ -85,6 +88,7 @@ Credentials can also be provided through environment variables. This is recommen
 | CurseForge   | `curseKey`           | `CURSE_KEY`          |
 | Modifold     | `modifoldKey`        | `MODIFOLD_KEY`       |
 | Thunderstore | `thunderstoreToken`  | `TCLI_AUTH_TOKEN`    |
+| GitHub       | `githubToken`        | `GITHUB_TOKEN`       |
 
 ---
 
@@ -213,6 +217,57 @@ hytalePublisher {
     //
     // plugin "build/libs/MyMod-${project.version}.jar"
     // world  "src/main/resources/worlds/my-cool-world"
+  }
+
+  github {
+    enabled = true
+
+    // Optional: "owner/repo". Auto-detected from the "origin" git remote if omitted.
+    // repository = "AzureDoom/Ovomorphosis"
+
+    // Optional credential key overrides
+    // apiKeyProp = "githubToken"
+    // apiKeyEnv  = "GITHUB_TOKEN"
+
+    // Tag applied to the release commit, e.g. "v1.0.0". The tag is created
+    // automatically by GitHub as part of creating the release — no separate
+    // git tag/push step is needed.
+    // tagPrefix = "v"
+
+    // Optional: commit or branch the tag points at. Defaults to the current HEAD.
+    // targetCommitish = "main"
+
+    // Optional: release title. Defaults to "<projectName> <projectVersion>".
+    // releaseName = ""
+
+    // draft      = false
+    // prerelease = false
+
+    // When true (default), releaseType values other than "release" (e.g. "beta",
+    // "alpha") automatically mark the GitHub release as a prerelease.
+    // autoPrerelease = true
+
+    // Let GitHub append its auto-generated notes after the changelog body.
+    // generateReleaseNotes = false
+
+    // Mirrors GitHub's make_latest release field: "true" | "false" | "legacy"
+    // makeLatest = "true"
+
+    // Optional: opens a linked discussion for the release under this category.
+    // discussionCategoryName = ""
+
+    // Attach the built jar, sources jar, and javadoc jar. Sources/javadoc are
+    // skipped automatically (with a warning) if those tasks aren't present.
+    // includeJar        = true
+    // includeSourcesJar = true
+    // includeJavadocJar = true
+
+    // Only relevant if your sourcesJar/javadocJar tasks use non-standard names
+    // sourcesJarTaskName = "sourcesJar"
+    // javadocJarTaskName = "javadocJar"
+
+    // Attach any additional files to the release
+    // asset "build/libs/extra-debug-symbols.zip"
   }
 }
 ```
@@ -479,15 +534,21 @@ jobs:
   publish:
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: write  # required for the github {} publish target to create releases/tags
+
     env:
       MODTALE_KEY: ${{ secrets.MODTALE_KEY }}
       CURSE_KEY: ${{ secrets.CURSE_KEY }}
       MODIFOLD_KEY: ${{ secrets.MODIFOLD_KEY }}
       TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # ensures the full history/tags are available for the github {} target
 
       - name: Set up Java
         uses: actions/setup-java@v5
@@ -505,7 +566,7 @@ jobs:
           ./gradlew publishAll
 ```
 
-Only platforms with `enabled = true` will publish. Store API keys as repository or organization secrets.
+Only platforms with `enabled = true` will publish. Store API keys as repository or organization secrets. `GITHUB_TOKEN` is provided automatically by GitHub Actions — you don't need to create it as a secret yourself, but the job does need `permissions: contents: write` for it to be allowed to create releases and tags.
 
 ---
 
@@ -589,24 +650,26 @@ Each publish task uses the JAR built by the subproject where the plugin is appli
 
 ## Tasks
 
-| Task                    | Description                                                         | Registered when                  |
-|-------------------------|---------------------------------------------------------------------|----------------------------------|
-| `publishToModtale`      | Uploads the built JAR and changelog to Modtale                      | `modtale.enabled = true`         |
-| `publishToCurseForge`   | Uploads the built JAR and changelog to CurseForge                   | `curseforge.enabled = true`      |
-| `publishToModifold`     | Uploads the built JAR and changelog to Modifold                     | `modifold.enabled = true`        |
-| `publishToThunderstore` | Builds a Thunderstore package zip and uploads it to thunderstore.io | `thunderstore.enabled = true`    |
-| `publishAll`            | Runs all enabled publishing tasks                                   | At least one platform is enabled |
+| Task                    | Description                                                                                       | Registered when                  |
+|-------------------------|---------------------------------------------------------------------------------------------------|----------------------------------|
+| `publishToModtale`      | Uploads the built JAR and changelog to Modtale                                                    | `modtale.enabled = true`         |
+| `publishToCurseForge`   | Uploads the built JAR and changelog to CurseForge                                                 | `curseforge.enabled = true`      |
+| `publishToModifold`     | Uploads the built JAR and changelog to Modifold                                                   | `modifold.enabled = true`        |
+| `publishToThunderstore` | Builds a Thunderstore package zip and uploads it to thunderstore.io                               | `thunderstore.enabled = true`    |
+| `publishToGitHub`       | Tags the release commit and publishes a GitHub release with the jar, sources jar, and javadoc jar | `github.enabled = true`          |
+| `publishAll`            | Runs all enabled publishing tasks                                                                 | At least one platform is enabled |
 
 ---
 
 ## Credential and Project ID Reference
 
-| Platform     | API key source                           | Project ID location                                   |
-|--------------|------------------------------------------|-------------------------------------------------------|
-| Modtale      | `modTaleKey` or `MODTALE_KEY`            | `modtale.projectId`                                   |
-| CurseForge   | `curseKey` or `CURSE_KEY`                | `curseforge.projectId`                                |
-| Modifold     | `modifoldKey` or `MODIFOLD_KEY`          | `modifold.projectId`                                  |
-| Thunderstore | `thunderstoreToken` or `TCLI_AUTH_TOKEN` | `thunderstore.namespace` / `thunderstore.packageName` |
+| Platform     | API key source                           | Project ID location                                            |
+|--------------|------------------------------------------|----------------------------------------------------------------|
+| Modtale      | `modTaleKey` or `MODTALE_KEY`            | `modtale.projectId`                                            |
+| CurseForge   | `curseKey` or `CURSE_KEY`                | `curseforge.projectId`                                         |
+| Modifold     | `modifoldKey` or `MODIFOLD_KEY`          | `modifold.projectId`                                           |
+| Thunderstore | `thunderstoreToken` or `TCLI_AUTH_TOKEN` | `thunderstore.namespace` / `thunderstore.packageName`          |
+| GitHub       | `githubToken` or `GITHUB_TOKEN`          | `github.repository` (auto-detected from git remote if omitted) |
 
 API key property names and environment variable names can be customized in the DSL using `apiKeyProp` and `apiKeyEnv`.
 
@@ -614,6 +677,7 @@ You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
 - CurseForge: https://authors.curseforge.com/#/settings/api-tokens
 - Modifold: https://modifold.com/settings/api
+- GitHub: https://github.com/settings/tokens
 
 ---
 
@@ -636,7 +700,7 @@ You can get your API from the following links:
 - Ensure your `hytale_version` matches a valid Modtale-supported version
 - Accepts dynamic selectors like `0.+` — see [Game Version](#game-version) for details
 - Use `modtale.patchline` (`"release"` or `"pre-release"`) to scope dynamic resolution to a specific Hytale Maven repo
-- `releaseType` is automatically normalised to uppercase (`RELEASE`, `BETA`, `ALPHA`) before upload — lowercase or mixed-case values in the DSL are accepted
+- `releaseType` is automatically normalized to uppercase (`RELEASE`, `BETA`, `ALPHA`) before upload — lowercase or mixed-case values in the DSL are accepted
 - Upload failures (4xx/5xx responses) fail the build immediately with the HTTP status code and full error body, so misconfigured credentials or project IDs are caught before the success message is printed
 - Set `replaceExisting = true` to allow re-uploading the same `versionNumber` for overlapping `gameVersions` — matching targets are replaced in place. Targets from the existing version that do not overlap are left unchanged. Defaults to `false`.
 
@@ -680,6 +744,18 @@ You can get your API from the following links:
   - Universes             -> `universes/`
   - Saves                 -> `saves/`
 - Once a package is uploaded, its `name` and `team` are immutable. Triple check both before your first publish.
+
+### GitHub
+
+- Creates a GitHub Release via the REST API. The release's `tag_name` is created automatically as part of creating the release — there's no separate tag/push step, and no way to publish a release without a tag (that's how GitHub Releases work).
+- `github.repository` ("owner/repo") is optional. If omitted, it's auto-detected from the `origin` git remote (both SSH and HTTPS remote URLs are supported).
+- The tag defaults to `tagPrefix + projectVersion`, e.g. `v1.0.0`. Override with `github.tagPrefix`.
+- `github.targetCommitish` defaults to the current `HEAD` commit SHA (resolved via `git rev-parse HEAD`). Set it explicitly if publishing from a detached or shallow checkout where `git` commands might not resolve as expected — shallow checkouts (`fetch-depth: 1`) can still resolve `HEAD`, but full history (`fetch-depth: 0`) is recommended for reliability.
+- Attaches the built jar, sources jar, and javadoc jar as release assets. Sources/javadoc are skipped with a warning (not a failure) if no `sourcesJar` / `javadocJar` task is found — this matches the task names produced by Gradle's `java.withSourcesJar()` / `withJavadocJar()`.
+- Additional files can be attached with `asset("path/to/file")`, resolved relative to the project directory unless given as an absolute path.
+- `releaseType` values other than `"release"` (e.g. `"beta"`, `"alpha"`) automatically mark the GitHub release as a prerelease. Disable this with `autoPrerelease = false`, or force it with `prerelease = true`.
+- Upload failures (4xx/5xx responses) fail the build immediately with the HTTP status code and full error body from GitHub.
+- **Workflow trigger caution:** if your CI workflow triggers on `release: types: [published]` (as in the [CI/CD Example](#cicd-example) above) and you also enable `github.enabled = true`, publishing will try to create *another* release for a tag that already exists, which fails. Either trigger the workflow on `push: tags` / `workflow_dispatch` instead, or keep `github.enabled = false` in workflows meant to run in response to a release you already created manually.
 
 ---
 

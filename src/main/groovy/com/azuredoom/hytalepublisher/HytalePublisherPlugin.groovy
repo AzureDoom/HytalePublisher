@@ -61,11 +61,42 @@ class HytalePublisherPlugin implements Plugin<Project> {
 				}
 			}
 
+			if (extension.github.enabled) {
+				project.tasks.register("publishToGitHub", GitHubPublishTask) { task ->
+					group = "publishing"
+					description = "Tags the release commit and publishes a GitHub release with the jar, sources, and javadoc attached."
+					dependsOn project.tasks.named("build")
+					configureCommonPublishInputs(task, project, extension, props)
+					githubConfig = extension.github
+
+					if (extension.github.includeSourcesJar) {
+						def sourcesTask = project.tasks.findByName(extension.github.sourcesJarTaskName)
+						if (sourcesTask != null) {
+							task.dependsOn sourcesTask
+							task.sourcesJarFile.set(sourcesTask.archiveFile)
+						} else {
+							project.logger.warn("[HytalePublisher] github.includeSourcesJar is true but task '${extension.github.sourcesJarTaskName}' was not found.")
+						}
+					}
+
+					if (extension.github.includeJavadocJar) {
+						def javadocTask = project.tasks.findByName(extension.github.javadocJarTaskName)
+						if (javadocTask != null) {
+							task.dependsOn javadocTask
+							task.javadocJarFile.set(javadocTask.archiveFile)
+						} else {
+							project.logger.warn("[HytalePublisher] github.includeJavadocJar is true but task '${extension.github.javadocJarTaskName}' was not found.")
+						}
+					}
+				}
+			}
+
 			def enabledTasks = []
 			if (extension.modtale.enabled)      enabledTasks << "publishToModtale"
 			if (extension.curseforge.enabled)   enabledTasks << "publishToCurseForge"
 			if (extension.modifold.enabled)     enabledTasks << "publishToModifold"
 			if (extension.thunderstore.enabled) enabledTasks << "publishToThunderstore"
+			if (extension.github.enabled)       enabledTasks << "publishToGitHub"
 
 			if (!enabledTasks.isEmpty()) {
 				project.tasks.register("publishAll") {

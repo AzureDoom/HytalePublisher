@@ -9,21 +9,31 @@ import javax.inject.Inject
 @SuppressWarnings("unused")
 class HytalePublisherExtension {
 	final Property<String> version
+
 	final Property<String> releaseType
+
 	final Property<String> gameVersion
+
 	final Property<String> changelogFile
 
 	final ModtaleConfig    modtale
+
 	final CurseForgeConfig curseforge
+
 	final ModifoldConfig   modifold
+
 	final ThunderstoreConfig thunderstore
+
+	final GitHubConfig     github
 
 	@Inject
 	HytalePublisherExtension(Project project) {
 		def objects = project.objects
 
 		version       = objects.property(String).convention(project.provider { project.version.toString() })
+
 		releaseType   = objects.property(String).convention("release")
+
 		gameVersion = objects.property(String).convention(
 				project.provider {
 					project.hasProperty("hytale_version")
@@ -34,40 +44,57 @@ class HytalePublisherExtension {
 		changelogFile = objects.property(String).convention("changelog.md")
 
 		modtale      = objects.newInstance(ModtaleConfig)
+
 		curseforge   = objects.newInstance(CurseForgeConfig)
+
 		modifold     = objects.newInstance(ModifoldConfig)
+
 		thunderstore = objects.newInstance(ThunderstoreConfig)
+
+		github       = objects.newInstance(GitHubConfig)
 
 		def defaultPatchline = project.hasProperty("patchline")
 				? project.property("patchline").toString()
 				: "release"
 
 		modtale.patchline = defaultPatchline
+
 		modifold.patchline = defaultPatchline
 	}
 
 	void modtale(Action<ModtaleConfig> action)       {
 		action.execute(modtale)
 	}
+
 	void curseforge(Action<CurseForgeConfig> action) {
 		action.execute(curseforge)
 	}
+
 	void modifold(Action<ModifoldConfig> action)     {
 		action.execute(modifold)
 	}
+
 	void thunderstore(Action<ThunderstoreConfig> action) {
 		action.execute(thunderstore)
+	}
+
+	void github(Action<GitHubConfig> action) {
+		action.execute(github)
 	}
 }
 
 class Dependency {
 	final String id
+
 	final String version
+
 	final boolean optional
 
 	Dependency(String id, String version = null, boolean optional = false) {
 		this.id       = id
+
 		this.version  = version
+
 		this.optional = optional
 	}
 }
@@ -75,11 +102,17 @@ class Dependency {
 @SuppressWarnings("unused")
 class ModtaleConfig {
 	boolean enabled = false
+
 	String projectId = ""
+
 	String apiKeyProp = "modTaleKey"
+
 	String apiKeyEnv  = "MODTALE_KEY"
+
 	String patchline = "release"
+
 	boolean replaceExisting = false
+
 	final List<Dependency> dependencies = []
 
 	void required(String modId, String version) {
@@ -94,10 +127,15 @@ class ModtaleConfig {
 @SuppressWarnings("unused")
 class CurseForgeConfig {
 	boolean enabled = false
+
 	String projectId = ""
+
 	String apiKeyProp = "curseKey"
+
 	String apiKeyEnv  = "CURSE_KEY"
+
 	List<Integer> gameVersionIds = [14284]
+
 	final List dependencies = []
 
 	void required(String slug) {
@@ -127,10 +165,12 @@ class CurseForgeConfig {
 
 class CurseForgeDependency {
 	final String slug
+
 	final String type
 
 	CurseForgeDependency(String slug, String type) {
 		this.slug = slug
+
 		this.type = type
 	}
 }
@@ -138,10 +178,15 @@ class CurseForgeDependency {
 @SuppressWarnings("unused")
 class ModifoldConfig {
 	boolean enabled = false
+
 	String projectId = ""
+
 	String apiKeyProp = "modifoldKey"
+
 	String apiKeyEnv = "MODIFOLD_KEY"
+
 	List loaders = ["Vanilla"]
+
 	List gameVersions = []
 
 	String patchline = "release"
@@ -182,24 +227,35 @@ class ThunderstoreConfig {
 	boolean enabled = false
 
 	String namespace      = ""
+
 	String packageName    = ""
+
 	String description    = ""
+
 	String websiteUrl     = ""
 
 	String community = "hytale"
+
 	List<String> communities = []
+
 	List<String> categories  = []
+
 	boolean hasNsfwContent   = false
 
 	String iconFile    = ""
+
 	String readmeFile  = ""
 
 	String apiKeyProp  = "thunderstoreToken"
+
 	String apiKeyEnv   = "TCLI_AUTH_TOKEN"
+
 	String repository  = "https://thunderstore.io"
 
 	final List<String> dependencies   = []
+
 	final Map<String, List<String>> contentBundles = [:]
+
 	final List<String> extraIncludes  = []
 
 	void dependency(String dependencyString) {
@@ -213,18 +269,23 @@ class ThunderstoreConfig {
 	void plugin(String path)      {
 		addContent("mods", path)
 	}
+
 	void earlyPlugin(String path) {
 		addContent("earlyplugins", path)
 	}
+
 	void assetPack(String path)   {
 		addContent("mods", path)
 	}
+
 	void world(String path)       {
 		addContent("worlds", path)
 	}
+
 	void universe(String path)    {
 		addContent("universes", path)
 	}
+
 	void save(String path)        {
 		addContent("saves", path)
 	}
@@ -244,5 +305,54 @@ class ThunderstoreConfig {
 			contentBundles.put(folder, list)
 		}
 		list << path
+	}
+}
+
+@SuppressWarnings("unused")
+class GitHubConfig {
+	boolean enabled = false
+
+	String repository = ""
+
+	String apiKeyProp = "githubToken"
+
+	String apiKeyEnv  = "GITHUB_TOKEN"
+
+	String apiBaseUrl    = "https://api.github.com"
+
+	String uploadBaseUrl = "https://uploads.github.com"
+
+	String tagPrefix = "v"
+
+	String targetCommitish = ""
+
+	String releaseName = ""
+
+	boolean draft      = false
+
+	boolean prerelease = false
+
+	boolean autoPrerelease = true
+
+	boolean generateReleaseNotes = false
+
+	String makeLatest = "true"
+
+	String discussionCategoryName = ""
+
+	boolean includeJar         = true
+
+	boolean includeSourcesJar  = true
+
+	boolean includeJavadocJar  = true
+
+	String sourcesJarTaskName = "sourcesJar"
+
+	String javadocJarTaskName = "javadocJar"
+
+	final List<String> extraAssets = []
+
+	void asset(String path) {
+		extraAssets << path
 	}
 }

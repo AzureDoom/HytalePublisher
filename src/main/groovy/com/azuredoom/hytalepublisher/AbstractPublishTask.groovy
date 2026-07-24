@@ -86,12 +86,17 @@ abstract class AbstractPublishTask extends DefaultTask {
 		return file.absolute ? file : new File(rootDirectory.get().asFile, path)
 	}
 
-	protected static void exec(List<String> args) {
+	protected static void exec(List<String> args, File workingDir = null) {
 		def command = args.collect { it.toString() }
 
-		def process = new ProcessBuilder(command)
+		def builder = new ProcessBuilder(command)
 				.redirectErrorStream(true)
-				.start()
+
+		if (workingDir != null) {
+			builder.directory(workingDir)
+		}
+
+		def process = builder.start()
 
 		def output = new StringBuilder()
 
@@ -115,12 +120,17 @@ abstract class AbstractPublishTask extends DefaultTask {
 		}
 	}
 
-	protected static String execCapture(List<String> args) {
+	protected static String execCapture(List<String> args, File workingDir = null) {
 		def command = args.collect { it.toString() }
 
-		def process = new ProcessBuilder(command)
+		def builder = new ProcessBuilder(command)
 				.redirectErrorStream(true)
-				.start()
+
+		if (workingDir != null) {
+			builder.directory(workingDir)
+		}
+
+		def process = builder.start()
 
 		def output = new StringBuilder()
 
