@@ -3,6 +3,7 @@ package com.azuredoom.hytalepublisher
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.provider.Property
+import org.gradle.api.publish.maven.MavenPom
 
 import javax.inject.Inject
 
@@ -25,6 +26,8 @@ class HytalePublisherExtension {
 	final ThunderstoreConfig thunderstore
 
 	final GitHubConfig     github
+
+	final MavenConfig      maven
 
 	@Inject
 	HytalePublisherExtension(Project project) {
@@ -53,6 +56,8 @@ class HytalePublisherExtension {
 
 		github       = objects.newInstance(GitHubConfig)
 
+		maven        = objects.newInstance(MavenConfig)
+
 		def defaultPatchline = project.hasProperty("patchline")
 				? project.property("patchline").toString()
 				: "release"
@@ -80,6 +85,10 @@ class HytalePublisherExtension {
 
 	void github(Action<GitHubConfig> action) {
 		action.execute(github)
+	}
+
+	void maven(Action<MavenConfig> action) {
+		action.execute(maven)
 	}
 }
 
@@ -354,5 +363,64 @@ class GitHubConfig {
 
 	void asset(String path) {
 		extraAssets << path
+	}
+}
+
+@SuppressWarnings("unused")
+class MavenConfig {
+	boolean enabled = false
+
+	String url = ""
+
+	String snapshotUrl = ""
+
+	boolean allowInsecureProtocol = false
+
+	String repositoryName   = "custom"
+
+	String publicationName  = "maven"
+
+	String groupId    = ""
+
+	String artifactId  = ""
+
+	String version    = ""
+
+	String usernameProp = "mavenUsername"
+
+	String usernameEnv  = "MAVEN_USERNAME"
+
+	String passwordProp = "mavenPassword"
+
+	String passwordEnv  = "MAVEN_PASSWORD"
+
+	boolean includeJar        = true
+
+	String jarTaskName        = "jar"
+
+	boolean includeSourcesJar = true
+
+	String sourcesJarTaskName = "sourcesJar"
+
+	boolean includeJavadocJar = true
+
+	String javadocJarTaskName = "javadocJar"
+
+	String pomName        = ""
+
+	String pomDescription = ""
+
+	String pomUrl         = ""
+
+	Action<MavenPom> pomAction = null
+
+	final List<String> extraArtifactPaths = []
+
+	void pom(Action<MavenPom> action) {
+		pomAction = action
+	}
+
+	void artifact(String path) {
+		extraArtifactPaths << path
 	}
 }

@@ -4,7 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Gradle](https://img.shields.io/badge/Gradle-plugin-02303A.svg?logo=gradle)](https://gradle.org/)
 
-HytalePublisher is a Gradle plugin for publishing Hytale mods to multiple hosting platforms, including Modtale, CurseForge, Modifold, Thunderstore, and GitHub Releases.
+HytalePublisher is a Gradle plugin for publishing Hytale mods to multiple hosting platforms, including Modtale, CurseForge, Modifold, Thunderstore, GitHub Releases, and custom Maven repositories.
 
 It provides a single Gradle DSL for configuring release metadata, platform-specific publishing options, credentials, and dependencies. Each publishing platform is opt-in, so only the platforms you enable will register publish tasks.
 
@@ -12,13 +12,14 @@ It provides a single Gradle DSL for configuring release metadata, platform-speci
 
 ## Features
 
-- Publish Hytale mods to Modtale, CurseForge, Modifold, Thunderstore, and GitHub Releases
+- Publish Hytale mods to Modtale, CurseForge, Modifold, Thunderstore, GitHub Releases, and custom Maven repositories
 - Enable only the publishing targets you need
 - Configure shared release metadata with sensible platform-specific defaults
 - Read API keys from `key.properties` or environment variables
 - Keep project IDs in the Gradle DSL instead of credential files
 - Define platform-specific dependencies on Modtale, CurseForge, and Modifold
 - Tag the release commit and publish a GitHub release with the jar, sources jar, and javadoc jar attached
+- Publish the jar (plus optional sources jar, javadoc jar, and extra artifacts) to any custom Maven repository, using Gradle's built-in `maven-publish` plugin under the hood
 - Automatically run `build` before publishing
 - Use `publishAll` to publish to every enabled platform
 - Designed to support additional hosting platforms in the future
@@ -67,9 +68,13 @@ curseKey=your-curseforge-api-token
 modifoldKey=your-modifold-bearer-token
 thunderstoreToken=your-thunderstore-service-account-token
 githubToken=your-github-personal-access-token
+mavenUsername=your-repo-username
+mavenPassword=your-repo-password-or-token
 ```
 
 Project IDs should be configured in the Gradle DSL, not in `key.properties`.
+
+Unlike the other platforms, Maven credentials are a username/password pair rather than a single API key, and they're optional — if `mavenUsername` / `mavenPassword` (or their environment variable equivalents) aren't set, `publishToMaven` still runs and attempts an unauthenticated publish, which is fine for repositories that don't require auth.
 
 You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
@@ -89,6 +94,8 @@ Credentials can also be provided through environment variables. This is recommen
 | Modifold     | `modifoldKey`        | `MODIFOLD_KEY`       |
 | Thunderstore | `thunderstoreToken`  | `TCLI_AUTH_TOKEN`    |
 | GitHub       | `githubToken`        | `GITHUB_TOKEN`       |
+| Maven        | `mavenUsername`      | `MAVEN_USERNAME`     |
+| Maven        | `mavenPassword`      | `MAVEN_PASSWORD`     |
 
 ---
 
@@ -268,6 +275,65 @@ hytalePublisher {
 
     // Attach any additional files to the release
     // asset "build/libs/extra-debug-symbols.zip"
+  }
+
+  maven {
+    enabled = true
+
+    // Required: where release versions get uploaded
+    url = "https://maven.azuredoom.com/mods"
+
+    // Optional: used instead of `url` when the resolved version ends with "-SNAPSHOT"
+    // snapshotUrl = "https://maven.azuredoom.com/mods-snapshots"
+
+    // Optional: allow plain http:// repository URLs (disabled by default for safety)
+    // allowInsecureProtocol = false
+
+    // Optional credential key overrides
+    // usernameProp = "mavenUsername"
+    // usernameEnv  = "MAVEN_USERNAME"
+    // passwordProp = "mavenPassword"
+    // passwordEnv  = "MAVEN_PASSWORD"
+
+    // Optional: defaults to project.group / project.name / hytalePublisher.version
+    // groupId    = "com.azuredoom"
+    // artifactId = "levelingcore"
+    // version    = project.version
+
+    // Optional: names for the Gradle publication and repository. Only relevant
+    // if you need to reference them elsewhere in your build.
+    // publicationName = "maven"
+    // repositoryName  = "custom"
+
+    // Attach the built jar, sources jar, and javadoc jar. Sources/javadoc are
+    // skipped automatically (with a warning) if those tasks aren't present.
+    // includeJar        = true
+    // includeSourcesJar = true
+    // includeJavadocJar = true
+
+    // Only relevant if your jar/sourcesJar/javadocJar tasks use non-standard names
+    // jarTaskName        = "jar"
+    // sourcesJarTaskName = "sourcesJar"
+    // javadocJarTaskName = "javadocJar"
+
+    // Attach any additional files to the publication
+    // artifact "build/libs/extra-debug-symbols.zip"
+
+    // Optional POM metadata
+    // pomName        = "LevelingCore"
+    // pomDescription = "Rendering and animation library for Hytale mods"
+    // pomUrl         = "https://github.com/AzureDoom/LevelingCore"
+
+    // Escape hatch for anything not covered above — delegates to Gradle's
+    // MavenPom directly (licenses, developers, SCM info, etc.)
+    // pom { pom ->
+    //   pom.licenses {
+    //     license {
+    //       name = "MIT License"
+    //       url  = "https://opensource.org/licenses/MIT"
+    //     }
+    //   }
+    // }
   }
 }
 ```
@@ -543,6 +609,8 @@ jobs:
       MODIFOLD_KEY: ${{ secrets.MODIFOLD_KEY }}
       TCLI_AUTH_TOKEN: ${{ secrets.TCLI_AUTH_TOKEN }}
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+      MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
     steps:
       - name: Checkout repository
@@ -657,21 +725,23 @@ Each publish task uses the JAR built by the subproject where the plugin is appli
 | `publishToModifold`     | Uploads the built JAR and changelog to Modifold                                                   | `modifold.enabled = true`        |
 | `publishToThunderstore` | Builds a Thunderstore package zip and uploads it to thunderstore.io                               | `thunderstore.enabled = true`    |
 | `publishToGitHub`       | Tags the release commit and publishes a GitHub release with the jar, sources jar, and javadoc jar | `github.enabled = true`          |
+| `publishToMaven`        | Publishes the jar (plus optional sources/javadoc/extra artifacts) to the configured Maven repo    | `maven.enabled = true`           |
 | `publishAll`            | Runs all enabled publishing tasks                                                                 | At least one platform is enabled |
 
 ---
 
 ## Credential and Project ID Reference
 
-| Platform     | API key source                           | Project ID location                                            |
-|--------------|------------------------------------------|----------------------------------------------------------------|
-| Modtale      | `modTaleKey` or `MODTALE_KEY`            | `modtale.projectId`                                            |
-| CurseForge   | `curseKey` or `CURSE_KEY`                | `curseforge.projectId`                                         |
-| Modifold     | `modifoldKey` or `MODIFOLD_KEY`          | `modifold.projectId`                                           |
-| Thunderstore | `thunderstoreToken` or `TCLI_AUTH_TOKEN` | `thunderstore.namespace` / `thunderstore.packageName`          |
-| GitHub       | `githubToken` or `GITHUB_TOKEN`          | `github.repository` (auto-detected from git remote if omitted) |
+| Platform     | API key source                                                                  | Project ID location                                            |
+|--------------|---------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Modtale      | `modTaleKey` or `MODTALE_KEY`                                                   | `modtale.projectId`                                            |
+| CurseForge   | `curseKey` or `CURSE_KEY`                                                       | `curseforge.projectId`                                         |
+| Modifold     | `modifoldKey` or `MODIFOLD_KEY`                                                 | `modifold.projectId`                                           |
+| Thunderstore | `thunderstoreToken` or `TCLI_AUTH_TOKEN`                                        | `thunderstore.namespace` / `thunderstore.packageName`          |
+| GitHub       | `githubToken` or `GITHUB_TOKEN`                                                 | `github.repository` (auto-detected from git remote if omitted) |
+| Maven        | `mavenUsername`/`mavenPassword` or `MAVEN_USERNAME`/`MAVEN_PASSWORD` (optional) | `maven.url`                                                    |
 
-API key property names and environment variable names can be customized in the DSL using `apiKeyProp` and `apiKeyEnv`.
+API key property names and environment variable names can be customized in the DSL using `apiKeyProp` and `apiKeyEnv` (or `usernameProp`/`usernameEnv`/`passwordProp`/`passwordEnv` for Maven).
 
 You can get your API from the following links:
 - Modtale: https://modtale.net/dashboard/developer
@@ -756,6 +826,23 @@ You can get your API from the following links:
 - `releaseType` values other than `"release"` (e.g. `"beta"`, `"alpha"`) automatically mark the GitHub release as a prerelease. Disable this with `autoPrerelease = false`, or force it with `prerelease = true`.
 - Upload failures (4xx/5xx responses) fail the build immediately with the HTTP status code and full error body from GitHub.
 - **Workflow trigger caution:** if your CI workflow triggers on `release: types: [published]` (as in the [CI/CD Example](#cicd-example) above) and you also enable `github.enabled = true`, publishing will try to create *another* release for a tag that already exists, which fails. Either trigger the workflow on `push: tags` / `workflow_dispatch` instead, or keep `github.enabled = false` in workflows meant to run in response to a release you already created manually.
+
+### Maven
+
+- Uses Gradle's built-in `maven-publish` plugin under the hood rather than a custom uploader — `maven.enabled = true` applies that plugin automatically, so you don't need to add it yourself.
+- `maven.url` is required. If `maven.snapshotUrl` is also set and the resolved `version` ends with `-SNAPSHOT`, that URL is used instead — the common release/snapshot repository split.
+- `groupId`, `artifactId`, and `version` default to `project.group`, `project.name`, and `hytalePublisher.version` respectively. Override any of them individually if your published coordinates should differ from the project's own.
+- Attaches the built jar by default. `includeSourcesJar` / `includeJavadocJar` attach `sourcesJar` / `javadocJar` task outputs if present, and are skipped with a warning (not a failure) otherwise — this matches Gradle's `java.withSourcesJar()` / `withJavadocJar()` task names, same as the GitHub target.
+- Additional files can be attached with `artifact("path/to/file")`, resolved relative to the project directory unless given as an absolute path.
+- The generated POM only includes what you set via `pomName` / `pomDescription` / `pomUrl` — it does **not** pull in your project's dependencies, since Hytale-mapped dependencies generally aren't resolvable through a normal Maven `<dependencies>` block anyway. For anything else (licenses, developers, SCM info), use the `pom { }` escape hatch, which is handed Gradle's `MavenPom` directly.
+- Credentials are optional — if `mavenUsername` / `mavenPassword` (or their env equivalents) aren't set, HytalePublisher logs an info message and attempts to publish without credentials, which works fine for repositories that permit unauthenticated writes.
+- `allowInsecureProtocol` must be set to `true` if your repository URL is plain `http://` rather than `https://`. It defaults to `false`.
+- Under the hood, `publishToMaven` is an alias for Gradle's auto-generated `publish<PublicationName>PublicationTo<RepositoryName>Repository` task, so it composes normally with other Gradle `maven-publish` tooling if you need it.
+- **Shadow plugin caution:** if you use `com.gradleup.shadow` (or `com.github.johnrengelman.shadow`) and set `shadowJar.archiveClassifier.set('')` to make the shaded jar your "final" build output, `shadowJar` and the plain `jar` task now write to the *same* file. Gradle's task validation will fail with something like `uses this output of task ':jar'/':shadowJar' without declaring an explicit or implicit dependency`, because it can't tell which task actually produced the file being published. Fix it with two changes:
+  - Set `maven.jarTaskName = "shadowJar"` so the plugin publishes (and depends on) the shaded jar rather than the plain one.
+  - Give the plain `jar` task a distinct classifier so it no longer collides, e.g. `jar { archiveClassifier.set('slim') }`.
+
+  This doesn't just silence the validation error — without it, there's a real risk of publishing the unshaded jar if task ordering ever shifts.
 
 ---
 

@@ -91,12 +91,17 @@ class HytalePublisherPlugin implements Plugin<Project> {
 				}
 			}
 
+			if (extension.maven.enabled) {
+				MavenPublishSupport.configure(project, extension, props)
+			}
+
 			def enabledTasks = []
 			if (extension.modtale.enabled)      enabledTasks << "publishToModtale"
 			if (extension.curseforge.enabled)   enabledTasks << "publishToCurseForge"
 			if (extension.modifold.enabled)     enabledTasks << "publishToModifold"
 			if (extension.thunderstore.enabled) enabledTasks << "publishToThunderstore"
 			if (extension.github.enabled)       enabledTasks << "publishToGitHub"
+			if (extension.maven.enabled)        enabledTasks << "publishToMaven"
 
 			if (!enabledTasks.isEmpty()) {
 				project.tasks.register("publishAll") {
