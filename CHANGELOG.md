@@ -1,3 +1,3 @@
-v1.1.9
+v1.1.10
 
-- Add Github publishing task. (https://github.com/AzureDoom/HytalePublisher/issues/6)
+- Add Custom Maven publishing task. (https://github.com/AzureDoom/HytalePublisher/issues/7)
