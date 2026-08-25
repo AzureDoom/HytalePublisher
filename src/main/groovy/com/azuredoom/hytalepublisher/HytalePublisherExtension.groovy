@@ -186,6 +186,7 @@ class CurseForgeDependency {
 
 @SuppressWarnings("unused")
 class ModifoldConfig {
+
 	boolean enabled = false
 
 	String projectId = ""
@@ -202,31 +203,34 @@ class ModifoldConfig {
 
 	final List dependencies = []
 
-	void required(String slug, String versionId = null) {
-		dependencies << new ModifoldDependency(slug, "required", versionId)
+	void required(String project, String versionId = null) {
+		dependencies << new ModifoldDependency(project, "required", versionId)
 	}
 
-	void optional(String slug, String versionId = null) {
-		dependencies << new ModifoldDependency(slug, "optional", versionId)
+	void optional(String project, String versionId = null) {
+		dependencies << new ModifoldDependency(project, "optional", versionId)
 	}
 
-	void incompatible(String slug, String versionId = null) {
-		dependencies << new ModifoldDependency(slug, "incompatible", versionId)
+	void incompatible(String project, String versionId = null) {
+		dependencies << new ModifoldDependency(project, "incompatible", versionId)
 	}
 
-	void embedded(String slug, String versionId = null) {
-		dependencies << new ModifoldDependency(slug, "embedded", versionId)
+	void embedded(String project, String versionId = null) {
+		dependencies << new ModifoldDependency(project, "embedded", versionId)
 	}
 }
 
 class ModifoldDependency {
-	final String slug
+
+	final String project
+
 	final String type
+
 	final String versionId
 
-	ModifoldDependency(String slug, String type, String versionId = null) {
-		this.slug      = slug
-		this.type      = type
+	ModifoldDependency(String project, String type, String versionId = null) {
+		this.project = project
+		this.type = type
 		this.versionId = versionId
 	}
 }
