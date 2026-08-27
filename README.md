@@ -21,7 +21,7 @@ Each platform is opt-in, and `publishAll` publishes to every enabled target.
 
 ```groovy
 plugins {
-    id "com.azuredoom.hytalepublisher" version "1.1.11"
+    id "com.azuredoom.hytalepublisher" version "1.1.12"
 }
 ```
 
