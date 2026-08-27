@@ -5,6 +5,7 @@ import org.gradle.api.Project
 import org.gradle.api.publish.PublishingExtension
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.publish.maven.plugins.MavenPublishPlugin
+import org.gradle.api.tasks.bundling.AbstractArchiveTask
 
 @SuppressWarnings("unused")
 class MavenPublishSupport {
@@ -31,9 +32,32 @@ class MavenPublishSupport {
 
 			if (cfg.includeJar) {
 				def jarTask = project.tasks.findByName(cfg.jarTaskName)
+
 				if (jarTask == null) {
-					throw new GradleException("[HytalePublisher] maven.includeJar is true but task '${cfg.jarTaskName}' was not found.")
+					throw new GradleException(
+					"[HytalePublisher] maven.includeJar is true but task '${cfg.jarTaskName}' was not found."
+					)
 				}
+
+				if (jarTask.hasProperty("archiveFile")) {
+					def selectedOutput = jarTask.archiveFile.get().asFile
+
+					project.tasks.withType(AbstractArchiveTask).each { otherTask ->
+						if (otherTask != jarTask && otherTask.enabled) {
+							def otherOutput = otherTask.archiveFile.get().asFile
+
+							if (otherOutput == selectedOutput) {
+								throw new GradleException(
+								"[HytalePublisher] Maven artifact task '${jarTask.name}' and " +
+								"'${otherTask.name}' both produce '${selectedOutput}'. " +
+								"Give the tasks different archive classifiers or disable " +
+								"'${otherTask.name}'."
+								)
+							}
+						}
+					}
+				}
+
 				publication.artifact(jarTask)
 			}
 
